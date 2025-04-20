@@ -7,3 +7,8 @@ use App\Http\Controllers\AdminAuthController;
 Route::get('/test/db', [TestController::class, 'testDatabase']);
 Route::get('/test/user', [TestController::class, 'testUser']);
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('/admin', [AdminAuthController::class, 'index']);
+    Route::get('/admin/{id}', [AdminAuthController::class, 'show']);
+});
