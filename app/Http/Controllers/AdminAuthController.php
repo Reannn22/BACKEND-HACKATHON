@@ -157,4 +157,76 @@ class AdminAuthController extends Controller
             ]
         ]);
     }
+
+    public function requestTokenForgetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $user = User::where('email', $request->email)
+                    ->where('role', 'admin')
+                    ->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        // Generate random token
+        $token = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 60);
+
+        // Save token to user with 30 seconds expiry
+        $user->update([
+            'reset_token' => $token,
+            'reset_token_expiry' => now()->addSeconds(30) // Changed from addHours(1) to addSeconds(30)
+        ]);
+
+        return response()->json([
+            'message' => 'Reset token generated successfully',
+            'token' => $token
+        ]);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required'
+        ]);
+
+        // First check if token exists
+        $user = User::where('reset_token', $request->token)
+                    ->where('role', 'admin')
+                    ->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Invalid token'
+            ], 400);
+        }
+
+        // Then check if token is expired
+        if ($user->reset_token_expiry <= now()) {
+            return response()->json([
+                'message' => 'Token has expired'
+            ], 400);
+        }
+
+        // Generate new password
+        $newPassword = 'temp' . rand(100000, 999999); // e.g. temp123456
+
+        // Update user with new hashed password
+        $user->update([
+            'password' => Hash::make($newPassword),
+            'reset_token' => null,
+            'reset_token_expiry' => null
+        ]);
+
+        return response()->json([
+            'message' => 'Password retrieved successfully',
+            'email' => $user->email,
+            'password' => $newPassword // Return unhashed password
+        ]);
+    }
 }

@@ -5,6 +5,8 @@ use App\Http\Controllers\TestController;
 use App\Http\Controllers\AdminAuthController;
 
 Route::post('/admin/login', [AdminAuthController::class, 'login']); // user dapat login sebagai admin
+Route::post('/admin/request_token_forget_password', [AdminAuthController::class, 'requestTokenForgetPassword']);
+Route::post('/admin/forgot_password', [AdminAuthController::class, 'forgotPassword']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/admin/{id}', [AdminAuthController::class, 'show']); // developer dapat melihat data admin
