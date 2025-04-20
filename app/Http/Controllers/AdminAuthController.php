@@ -119,4 +119,42 @@ class AdminAuthController extends Controller
             ]
         ]);
     }
+
+    public function changePassword(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6'
+        ]);
+
+        // Check if current password matches
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Current password is incorrect'
+            ], 401);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return response()->json([
+            'message' => 'Password updated successfully',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'updated_at' => $user->updated_at
+            ]
+        ]);
+    }
 }
