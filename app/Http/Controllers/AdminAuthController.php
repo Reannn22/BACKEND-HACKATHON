@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class AdminAuthController extends Controller
@@ -34,6 +35,15 @@ class AdminAuthController extends Controller
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
             'user' => $user
+        ]);
+    }
+
+    public function logout()
+    {
+        auth()->logout();
+
+        return response()->json([
+            'message' => 'Successfully logged out'
         ]);
     }
 
@@ -74,6 +84,39 @@ class AdminAuthController extends Controller
                     'updated_at' => $admin->updated_at
                 ];
             })
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'required|min:6'
+        ]);
+
+        $user->update([
+            'email' => $request->email,
+            'password' => Hash::make($request->password)
+        ]);
+
+        return response()->json([
+            'message' => 'Admin updated successfully',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at
+            ]
         ]);
     }
 }
