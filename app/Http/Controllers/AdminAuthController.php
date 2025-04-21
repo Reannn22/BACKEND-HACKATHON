@@ -229,4 +229,21 @@ class AdminAuthController extends Controller
             'password' => $newPassword // Return unhashed password
         ]);
     }
+
+    public function destroy($id)
+    {
+        $user = User::find($id);
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Admin deleted successfully'
+        ]);
+    }
 }
