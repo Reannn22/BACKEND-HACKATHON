@@ -204,7 +204,9 @@ class AdminAuthController extends Controller
     public function forgotPassword(Request $request)
     {
         $request->validate([
-            'token' => 'required'
+            'token' => 'required',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password'
         ]);
 
         // First check if token exists
@@ -225,20 +227,15 @@ class AdminAuthController extends Controller
             ], 400);
         }
 
-        // Generate new password
-        $newPassword = 'temp' . rand(100000, 999999); // e.g. temp123456
-
-        // Update user with new hashed password
+        // Update user with new password
         $user->update([
-            'password' => Hash::make($newPassword),
+            'password' => Hash::make($request->new_password),
             'reset_token' => null,
             'reset_token_expiry' => null
         ]);
 
         return response()->json([
-            'message' => 'Password retrieved successfully',
-            'email' => $user->email,
-            'password' => $newPassword // Return unhashed password
+            'message' => 'Password updated successfully'
         ]);
     }
 
