@@ -197,7 +197,7 @@ class AdminAuthController extends Controller
             ]);
 
         return response()->json([
-            'message' => 'Reset token sudah dikirim ke email'
+            'message' => "A reset token has been sent to your email address, the token will expire in 30 seconds",
         ]);
     }
 
