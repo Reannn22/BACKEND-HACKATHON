@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
 
 class AdminAuthController extends Controller
@@ -180,12 +181,23 @@ class AdminAuthController extends Controller
         // Save token to user with 30 seconds expiry
         $user->update([
             'reset_token' => $token,
-            'reset_token_expiry' => now()->addSeconds(30) // Changed from addHours(1) to addSeconds(30)
+            'reset_token_expiry' => now()->addSeconds(30)
         ]);
 
+        // Send email using Resend API with SSL verification disabled
+        $response = Http::withoutVerifying()
+            ->withHeaders([
+                'Authorization' => 'Bearer re_RS4BGVvJ_FAVdNzRbqjag2BS3C5G5zAMq',
+                'Content-Type' => 'application/json',
+            ])->post('https://api.resend.com/emails', [
+                'from' => 'onboarding@resend.dev',
+                'to' => $request->email,
+                'subject' => 'Reset Password - LendEase',
+                'html' => "<p>Hi there,</p><p>We received a request to reset your password for your <strong>LendEase</strong> account.</p><p>Your password reset token is:</p><h2>{$token}</h2><p>If you didn't request this, you can safely ignore this email.</p><p>Thanks, <br>The LendEase Team</p>"
+            ]);
+
         return response()->json([
-            'message' => 'Reset token generated successfully',
-            'token' => $token
+            'message' => 'Reset token sudah dikirim ke email'
         ]);
     }
 
