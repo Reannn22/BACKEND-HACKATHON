@@ -13,8 +13,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/admin', [AdminAuthController::class, 'index']); //developer dapat melihat semua data admin
     Route::put('/admin/{id}', [AdminAuthController::class, 'update']); // developer dapat mengupdate data admin
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']); // admin dapat logout
-    Route::put('/admin/{id}/change_password', [AdminAuthController::class, 'changePassword']); // developer dapat mengubah password admin
+    Route::post('/admin/{id}/change_password', [AdminAuthController::class, 'changePassword']); // change password with token
     Route::delete('/admin/{id}', [AdminAuthController::class, 'destroy']); // admin dapat dihapus
     Route::post('/admin/{id}/request_token_change_no_hp', [AdminAuthController::class, 'requestTokenChangeNoHp']);
     Route::post('/admin/{id}/change_no_hp', [AdminAuthController::class, 'changeNoHp']);
+    Route::post('/admin/{id}/request_token_change_password', [AdminAuthController::class, 'requestTokenChangePassword']);
 });

@@ -137,19 +137,27 @@ class AdminAuthController extends Controller
         }
 
         $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:6'
+            'token' => 'required',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password'
         ]);
 
-        // Check if current password matches
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (!$user->password_change_token || $user->password_change_token !== $request->token) {
             return response()->json([
-                'message' => 'Current password is incorrect'
-            ], 401);
+                'message' => 'Invalid token'
+            ], 400);
+        }
+
+        if ($user->password_change_token_expiry <= now()) {
+            return response()->json([
+                'message' => 'Token has expired'
+            ], 400);
         }
 
         $user->update([
-            'password' => Hash::make($request->new_password)
+            'password' => Hash::make($request->new_password),
+            'password_change_token' => null,
+            'password_change_token_expiry' => null
         ]);
 
         return response()->json([
@@ -373,6 +381,106 @@ class AdminAuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'no_hp' => $user->no_hp,
+                'updated_at' => $user->updated_at
+            ]
+        ]);
+    }
+
+    public function requestTokenChangePassword(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        if ($user->email !== $request->email) {
+            return response()->json([
+                'message' => 'Email is incorrect'
+            ], 401);
+        }
+
+        // Check if there's an active token
+        if ($user->password_change_token && $user->password_change_token_expiry > now()) {
+            $remainingSeconds = now()->diffInSeconds($user->password_change_token_expiry);
+            return response()->json([
+                'message' => "Please wait {$remainingSeconds} seconds before requesting another token"
+            ], 429);
+        }
+
+        // Generate random token
+        $token = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 60);
+
+        // Save token with 60 seconds expiry
+        $user->update([
+            'password_change_token' => $token,
+            'password_change_token_expiry' => now()->addSeconds(60)
+        ]);
+
+        // Send email with token
+        $emailResponse = Http::withoutVerifying()
+            ->withHeaders([
+                'Authorization' => 'Bearer re_RS4BGVvJ_FAVdNzRbqjag2BS3C5G5zAMq',
+                'Content-Type' => 'application/json',
+            ])->post('https://api.resend.com/emails', [
+                'from' => 'onboarding@resend.dev',
+                'to' => $request->email,
+                'subject' => 'Change Password - LendEase',
+                'html' => "<p>Hi there,</p><p>We received a request to change your password for your <strong>LendEase</strong> account.</p><p>Your verification token is:</p><h2>{$token}</h2><p>If you didn't request this, you can safely ignore this email.</p><p>Thanks, <br>The LendEase Team</p>"
+            ]);
+
+        return response()->json([
+            'message' => "A verification token has been sent to your email, the token will expire in 60 seconds"
+        ]);
+    }
+
+    public function changePasswordWithToken(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'token' => 'required',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password'
+        ]);
+
+        if (!$user->password_change_token || $user->password_change_token !== $request->token) {
+            return response()->json([
+                'message' => 'Invalid token'
+            ], 400);
+        }
+
+        if ($user->password_change_token_expiry <= now()) {
+            return response()->json([
+                'message' => 'Token has expired'
+            ], 400);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password),
+            'password_change_token' => null,
+            'password_change_token_expiry' => null
+        ]);
+
+        return response()->json([
+            'message' => 'Password updated successfully',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
                 'updated_at' => $user->updated_at
             ]
         ]);
