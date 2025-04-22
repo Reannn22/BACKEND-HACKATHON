@@ -13,8 +13,9 @@ class AdminSeeder extends Seeder
         DB::table('users')->insert([
             'name' => 'Reyhan Capri Moraga',
             'email' => 'reyhan.123140022@student.itera.ac.id',
-            'password' => Hash::make('Rean2006?'), // This ensures password is hashed
+            'password' => Hash::make('reyhansuka'), // Changed password
             'role' => 'admin',
+            'no_hp' => '082269283309',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
