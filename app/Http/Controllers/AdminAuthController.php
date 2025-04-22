@@ -279,4 +279,102 @@ class AdminAuthController extends Controller
             'message' => 'Admin deleted successfully'
         ]);
     }
+
+    public function requestTokenChangeNoHp(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'current_no_hp' => 'required|string'
+        ]);
+
+        if ($user->no_hp !== $request->current_no_hp) {
+            return response()->json([
+                'message' => 'Current phone number is incorrect'
+            ], 401);
+        }
+
+        // Check if there's an active token
+        if ($user->phone_change_token && $user->phone_change_token_expiry > now()) {
+            $remainingSeconds = now()->diffInSeconds($user->phone_change_token_expiry);
+            return response()->json([
+                'message' => "Please wait {$remainingSeconds} seconds before requesting another token"
+            ], 429);
+        }
+
+        // Generate random token
+        $token = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 60);
+
+        // Save token with 60 seconds expiry
+        $user->update([
+            'phone_change_token' => $token,
+            'phone_change_token_expiry' => now()->addSeconds(60)
+        ]);
+
+        // Send WhatsApp message with token to current_no_hp
+        $whatsappResponse = Http::withoutVerifying()
+            ->withHeaders([
+                'Authorization' => 'HZRHUDM3PSGkj1u5WCPy'
+            ])->asForm()->post('https://api.fonnte.com/send', [
+                'target' => $request->current_no_hp,
+                'message' => "Hi there,\n\nWe received a request to change your phone number for your *LendEase* account.\n\nYour verification token is:\n*{$token}*\n\nIf you didn't request this, you can safely ignore this message.\n\nThanks,\nThe LendEase Team"
+            ]);
+
+        return response()->json([
+            'message' => "A verification token has been sent to your current WhatsApp number, the token will expire in 60 seconds"
+        ]);
+    }
+
+    public function changeNoHp(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'token' => 'required',
+            'new_no_hp' => 'required|string',
+            'confirm_no_hp' => 'required|same:new_no_hp'
+        ]);
+
+        if (!$user->phone_change_token || $user->phone_change_token !== $request->token) {
+            return response()->json([
+                'message' => 'Invalid token'
+            ], 400);
+        }
+
+        if ($user->phone_change_token_expiry <= now()) {
+            return response()->json([
+                'message' => 'Token has expired'
+            ], 400);
+        }
+
+        $user->update([
+            'no_hp' => $request->new_no_hp,
+            'phone_change_token' => null,
+            'phone_change_token_expiry' => null
+        ]);
+
+        return response()->json([
+            'message' => 'Phone number updated successfully',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'no_hp' => $user->no_hp,
+                'updated_at' => $user->updated_at
+            ]
+        ]);
+    }
 }

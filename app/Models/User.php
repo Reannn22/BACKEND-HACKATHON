@@ -24,6 +24,8 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'no_hp',
         'reset_token',
         'reset_token_expiry',
+        'phone_change_token',
+        'phone_change_token_expiry',
     ];
 
     /**
