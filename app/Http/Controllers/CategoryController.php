@@ -9,11 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class CategoryController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:api');
-    }
-
     public function index(): JsonResponse
     {
         try {
@@ -34,7 +29,7 @@ class CategoryController extends Controller
     {
         try {
             $request->validate([
-                'nama_kategori' => 'required|string|max:255'
+                'nama_kategori' => 'required|string|max:255|unique:categories,nama_kategori'
             ]);
 
             $category = Category::create([
