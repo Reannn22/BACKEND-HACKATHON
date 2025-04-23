@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\CategoryController;
 
 Route::post('/admin/login', [AdminAuthController::class, 'login']); // user dapat login sebagai admin
 Route::post('/admin/request_token_forget_password', [AdminAuthController::class, 'requestTokenForgetPassword']);
@@ -18,4 +19,5 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/admin/{id}/request_token_change_no_hp', [AdminAuthController::class, 'requestTokenChangeNoHp']);
     Route::post('/admin/{id}/change_no_hp', [AdminAuthController::class, 'changeNoHp']);
     Route::post('/admin/{id}/request_token_change_password', [AdminAuthController::class, 'requestTokenChangePassword']);
+    Route::post('/categories', [CategoryController::class, 'store']);
 });
