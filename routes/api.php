@@ -9,6 +9,11 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ValidationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BorrowingController;
+use App\Http\Controllers\ItemDetailController;
+use App\Http\Controllers\RoomDetailController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\RoomReviewController;
 
 Route::post('/admin/login', [AdminAuthController::class, 'login']); // user dapat login sebagai admin
 Route::post('/admin/request_token_forget_password', [AdminAuthController::class, 'requestTokenForgetPassword']);
@@ -26,11 +31,13 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/admin/{id}/change_no_hp', [AdminAuthController::class, 'changeNoHp']);
     Route::post('/admin/{id}/request_token_change_password', [AdminAuthController::class, 'requestTokenChangePassword']);
     Route::delete('/admin', [AdminAuthController::class, 'deleteAll']);
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::get('/categories/{id}', [CategoryController::class, 'show']);
-    Route::put('/categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']); // add this line
+
+    // Items Categories routes (renamed from Categories)
+    Route::get('/items_categories', [CategoryController::class, 'index']);
+    Route::post('/items_categories', [CategoryController::class, 'store']);
+    Route::get('/items_categories/{id}', [CategoryController::class, 'show']);
+    Route::put('/items_categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('/items_categories/{id}', [CategoryController::class, 'destroy']);
 
     // Items routes
     Route::get('/items', [ItemController::class, 'index']);
@@ -39,12 +46,26 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/items/{id}', [ItemController::class, 'update']);
     Route::delete('/items/{id}', [ItemController::class, 'destroy']);
 
+    // Items Detail routes
+    Route::get('/items_detail', [ItemDetailController::class, 'index']);
+    Route::post('/items_detail', [ItemDetailController::class, 'store']);
+    Route::get('/items_detail/{id}', [ItemDetailController::class, 'show']);
+    Route::put('/items_detail/{id}', [ItemDetailController::class, 'update']);
+    Route::delete('/items_detail/{id}', [ItemDetailController::class, 'destroy']);
+
     // Rooms routes
     Route::get('/rooms', [RoomController::class, 'index']);
     Route::post('/rooms', [RoomController::class, 'store']);
     Route::get('/rooms/{id}', [RoomController::class, 'show']);
     Route::put('/rooms/{id}', [RoomController::class, 'update']);
     Route::delete('/rooms/{id}', [RoomController::class, 'destroy']);
+
+    // Rooms Detail routes
+    Route::get('/rooms_detail', [RoomDetailController::class, 'index']);
+    Route::post('/rooms_detail', [RoomDetailController::class, 'store']);
+    Route::get('/rooms_detail/{id}', [RoomDetailController::class, 'show']);
+    Route::put('/rooms_detail/{id}', [RoomDetailController::class, 'update']);
+    Route::delete('/rooms_detail/{id}', [RoomDetailController::class, 'destroy']);
 
     // Validations routes
     Route::get('/validations', [ValidationController::class, 'index']);
@@ -66,4 +87,25 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/borrowings/{id}', [BorrowingController::class, 'show']);
     Route::put('/borrowings/{id}', [BorrowingController::class, 'update']);
     Route::delete('/borrowings/{id}', [BorrowingController::class, 'destroy']);
+
+    // Activities Log routes
+    Route::get('/activities_log', [ActivityLogController::class, 'index']);
+    Route::post('/activities_log', [ActivityLogController::class, 'store']);
+    Route::get('/activities_log/{id}', [ActivityLogController::class, 'show']);
+    Route::put('/activities_log/{id}', [ActivityLogController::class, 'update']);
+    Route::delete('/activities_log/{id}', [ActivityLogController::class, 'destroy']);
+
+    // Reviews routes (renamed to Items Reviews)
+    Route::get('/items_reviews', [ReviewController::class, 'index']);
+    Route::post('/items_reviews', [ReviewController::class, 'store']);
+    Route::get('/items_reviews/{id}', [ReviewController::class, 'show']);
+    Route::put('/items_reviews/{id}', [ReviewController::class, 'update']);
+    Route::delete('/items_reviews/{id}', [ReviewController::class, 'destroy']);
+
+    // Room Reviews routes
+    Route::get('/rooms_reviews', [RoomReviewController::class, 'index']);
+    Route::post('/rooms_reviews', [RoomReviewController::class, 'store']);
+    Route::get('/rooms_reviews/{id}', [RoomReviewController::class, 'show']);
+    Route::put('/rooms_reviews/{id}', [RoomReviewController::class, 'update']);
+    Route::delete('/rooms_reviews/{id}', [RoomReviewController::class, 'destroy']);
 });
