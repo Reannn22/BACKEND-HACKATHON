@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Models\RoomCategory;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class CategoryController extends Controller
+class RoomCategoryController extends Controller
 {
     public function index(): JsonResponse
     {
         try {
-            $categories = Category::all();
+            $categories = RoomCategory::all();
             return response()->json([
-                'message' => 'Categories retrieved successfully',
+                'message' => 'Room categories retrieved successfully',
                 'data' => $categories
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to retrieve categories',
+                'message' => 'Failed to retrieve room categories',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -29,15 +29,15 @@ class CategoryController extends Controller
     {
         try {
             $request->validate([
-                'nama_kategori' => 'required|string|max:255|unique:categories,nama_kategori'
+                'nama_kategori' => 'required|string|max:255|unique:room_categories,nama_kategori'
             ]);
 
-            $category = Category::create([
+            $category = RoomCategory::create([
                 'nama_kategori' => $request->nama_kategori
             ]);
 
             return response()->json([
-                'message' => 'Category created successfully',
+                'message' => 'Room category created successfully',
                 'data' => [
                     'id' => $category->id,
                     'nama_kategori' => $category->nama_kategori,
@@ -53,7 +53,7 @@ class CategoryController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to create category',
+                'message' => 'Failed to create room category',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -62,14 +62,14 @@ class CategoryController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $category = Category::findOrFail($id);
+            $category = RoomCategory::findOrFail($id);
             return response()->json([
-                'message' => 'Category retrieved successfully',
+                'message' => 'Room category retrieved successfully',
                 'data' => $category
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Category not found',
+                'message' => 'Room category not found',
                 'error' => $e->getMessage()
             ], 404);
         }
@@ -78,19 +78,19 @@ class CategoryController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         try {
-            $category = Category::findOrFail($id);
+            $category = RoomCategory::findOrFail($id);
             $request->validate([
-                'nama_kategori' => 'required|string|unique:categories,nama_kategori,'.$id
+                'nama_kategori' => 'required|string|unique:room_categories,nama_kategori,'.$id
             ]);
 
             $category->update($request->all());
             return response()->json([
-                'message' => 'Category updated successfully',
+                'message' => 'Room category updated successfully',
                 'data' => $category
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to update category',
+                'message' => 'Failed to update room category',
                 'error' => $e->getMessage()
             ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
         }
@@ -99,14 +99,14 @@ class CategoryController extends Controller
     public function destroy(int $id): JsonResponse
     {
         try {
-            $category = Category::findOrFail($id);
+            $category = RoomCategory::findOrFail($id);
             $category->delete();
             return response()->json([
-                'message' => 'Category deleted successfully'
+                'message' => 'Room category deleted successfully'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to delete category',
+                'message' => 'Failed to delete room category',
                 'error' => $e->getMessage()
             ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
         }
@@ -115,15 +115,15 @@ class CategoryController extends Controller
     public function deleteAll(): JsonResponse
     {
         try {
-            $count = Category::count();
-            Category::truncate();
+            $count = RoomCategory::count();
+            RoomCategory::truncate();
 
             return response()->json([
-                'message' => $count . ' categories have been deleted successfully'
+                'message' => $count . ' room categories have been deleted successfully'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to delete categories',
+                'message' => 'Failed to delete room categories',
                 'error' => $e->getMessage()
             ], 500);
         }

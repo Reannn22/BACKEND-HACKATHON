@@ -14,6 +14,7 @@ use App\Http\Controllers\RoomDetailController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\RoomReviewController;
+use App\Http\Controllers\RoomCategoryController;
 
 Route::post('/admin/login', [AdminAuthController::class, 'login']); // user dapat login sebagai admin
 Route::post('/admin/request_token_forget_password', [AdminAuthController::class, 'requestTokenForgetPassword']);
@@ -25,11 +26,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/admin', [AdminAuthController::class, 'index']); //developer dapat melihat semua data admin
     Route::put('/admin/{id}', [AdminAuthController::class, 'update']); // developer dapat mengupdate data admin
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']); // admin dapat logout
-    Route::post('/admin/{id}/change_password', [AdminAuthController::class, 'changePassword']); // change password with token
+    Route::post('/admin/change_password', [AdminAuthController::class, 'changePassword']); // change password with token
     Route::delete('/admin/{id}', [AdminAuthController::class, 'destroy']); // admin dapat dihapus
-    Route::post('/admin/{id}/request_token_change_no_hp', [AdminAuthController::class, 'requestTokenChangeNoHp']);
-    Route::post('/admin/{id}/change_no_hp', [AdminAuthController::class, 'changeNoHp']);
-    Route::post('/admin/{id}/request_token_change_password', [AdminAuthController::class, 'requestTokenChangePassword']);
+    Route::post('/admin/request_token_change_no_hp', [AdminAuthController::class, 'requestTokenChangeNoHp']);
+    Route::post('/admin/change_no_hp', [AdminAuthController::class, 'changeNoHp']);
+    Route::post('/admin/request_token_change_password', [AdminAuthController::class, 'requestTokenChangePassword']); // modified this line
     Route::delete('/admin', [AdminAuthController::class, 'deleteAll']);
 
     // Items Categories routes (renamed from Categories)
@@ -38,6 +39,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/items_categories/{id}', [CategoryController::class, 'show']);
     Route::put('/items_categories/{id}', [CategoryController::class, 'update']);
     Route::delete('/items_categories/{id}', [CategoryController::class, 'destroy']);
+    Route::delete('/items_categories', [CategoryController::class, 'deleteAll']); // Add this line
 
     // Items routes
     Route::get('/items', [ItemController::class, 'index']);
@@ -66,6 +68,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/rooms_detail/{id}', [RoomDetailController::class, 'show']);
     Route::put('/rooms_detail/{id}', [RoomDetailController::class, 'update']);
     Route::delete('/rooms_detail/{id}', [RoomDetailController::class, 'destroy']);
+
+    // Rooms Categories routes
+    Route::get('/rooms_categories', [RoomCategoryController::class, 'index']);
+    Route::post('/rooms_categories', [RoomCategoryController::class, 'store']);
+    Route::get('/rooms_categories/{id}', [RoomCategoryController::class, 'show']);
+    Route::put('/rooms_categories/{id}', [RoomCategoryController::class, 'update']);
+    Route::delete('/rooms_categories/{id}', [RoomCategoryController::class, 'destroy']);
+    Route::delete('/rooms_categories', [RoomCategoryController::class, 'deleteAll']);
 
     // Validations routes
     Route::get('/validations', [ValidationController::class, 'index']);

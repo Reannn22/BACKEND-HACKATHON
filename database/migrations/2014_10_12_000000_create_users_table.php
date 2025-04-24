@@ -27,8 +27,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Set auto-increment to start from 0
-        DB::statement('ALTER TABLE users AUTO_INCREMENT = 0');
+        DB::statement('ALTER TABLE users AUTO_INCREMENT = 1');
     }
 
     public function down()

@@ -128,21 +128,24 @@ class AdminAuthController extends Controller
         ]);
     }
 
-    public function changePassword(Request $request, $id)
+    public function changePassword(Request $request)
     {
-        $user = User::find($id);
-
-        if (!$user || $user->role !== 'admin') {
-            return response()->json([
-                'message' => 'Admin not found'
-            ], 404);
-        }
-
         $request->validate([
+            'email' => 'required|email',
             'token' => 'required',
             'new_password' => 'required|min:6',
             'confirm_password' => 'required|same:new_password'
         ]);
+
+        $user = User::where('email', $request->email)
+                    ->where('role', 'admin')
+                    ->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
 
         if (!$user->password_change_token || $user->password_change_token !== $request->token) {
             return response()->json([
@@ -290,24 +293,20 @@ class AdminAuthController extends Controller
         ]);
     }
 
-    public function requestTokenChangeNoHp(Request $request, $id)
+    public function requestTokenChangeNoHp(Request $request)
     {
-        $user = User::find($id);
-
-        if (!$user || $user->role !== 'admin') {
-            return response()->json([
-                'message' => 'Admin not found'
-            ], 404);
-        }
-
         $request->validate([
             'current_no_hp' => 'required|string'
         ]);
 
-        if ($user->no_hp !== $request->current_no_hp) {
+        $user = User::where('no_hp', $request->current_no_hp)
+                    ->where('role', 'admin')
+                    ->first();
+
+        if (!$user) {
             return response()->json([
-                'message' => 'Current phone number is incorrect'
-            ], 401);
+                'message' => 'Admin not found'
+            ], 404);
         }
 
         // Check if there's an active token
@@ -341,21 +340,24 @@ class AdminAuthController extends Controller
         ]);
     }
 
-    public function changeNoHp(Request $request, $id)
+    public function changeNoHp(Request $request)
     {
-        $user = User::find($id);
-
-        if (!$user || $user->role !== 'admin') {
-            return response()->json([
-                'message' => 'Admin not found'
-            ], 404);
-        }
-
         $request->validate([
+            'email' => 'required|email',
             'token' => 'required',
             'new_no_hp' => 'required|string',
             'confirm_no_hp' => 'required|same:new_no_hp'
         ]);
+
+        $user = User::where('email', $request->email)
+                    ->where('role', 'admin')
+                    ->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+        }
 
         if (!$user->phone_change_token || $user->phone_change_token !== $request->token) {
             return response()->json([
@@ -388,24 +390,20 @@ class AdminAuthController extends Controller
         ]);
     }
 
-    public function requestTokenChangePassword(Request $request, $id)
+    public function requestTokenChangePassword(Request $request)
     {
-        $user = User::find($id);
-
-        if (!$user || $user->role !== 'admin') {
-            return response()->json([
-                'message' => 'Admin not found'
-            ], 404);
-        }
-
         $request->validate([
             'email' => 'required|email'
         ]);
 
-        if ($user->email !== $request->email) {
+        $user = User::where('email', $request->email)
+                    ->where('role', 'admin')
+                    ->first();
+
+        if (!$user) {
             return response()->json([
-                'message' => 'Email is incorrect'
-            ], 401);
+                'message' => 'Admin not found'
+            ], 404);
         }
 
         // Check if there's an active token
