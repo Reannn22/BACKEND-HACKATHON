@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 use App\Models\User;
 
 class AdminAuthController extends Controller
@@ -484,5 +486,69 @@ class AdminAuthController extends Controller
                 'updated_at' => $user->updated_at
             ]
         ]);
+    }
+
+    public function register(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8',
+                'role' => 'required|string|in:admin',
+                'no_hp' => 'required|string|max:15'
+            ]);
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+                'no_hp' => $request->no_hp
+            ]);
+
+            // Send email notification
+            Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => 'Bearer re_RS4BGVvJ_FAVdNzRbqjag2BS3C5G5zAMq',
+                    'Content-Type' => 'application/json',
+                ])->post('https://api.resend.com/emails', [
+                    'from' => 'onboarding@resend.dev',
+                    'to' => $request->email,
+                    'subject' => 'Welcome to LendEase - Registration Successful',
+                    'html' => "<p>Hi {$request->name},</p><p>Welcome to <strong>LendEase</strong>!</p><p>Your admin account has been successfully registered with this email address.</p><p>You can now log in to your account using your email and password.</p><p>Thanks,<br>The LendEase Team</p>"
+                ]);
+
+            // Send WhatsApp notification
+            Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => 'HZRHUDM3PSGkj1u5WCPy'
+                ])->asForm()->post('https://api.fonnte.com/send', [
+                    'target' => $request->no_hp,
+                    'message' => "Hi {$request->name},\n\nWelcome to *LendEase*!\n\nYour admin account has been successfully registered.\n\nEmail: {$request->email}\nPhone: {$request->no_hp}\n\nYou can now log in to your account using your email and password.\n\nThanks,\nThe LendEase Team"
+                ]);
+
+            return response()->json([
+                'message' => 'Admin registered successfully',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'no_hp' => $user->no_hp
+                ]
+            ], 201);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to register admin',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
