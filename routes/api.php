@@ -25,6 +25,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/admin/{id}/request_token_change_no_hp', [AdminAuthController::class, 'requestTokenChangeNoHp']);
     Route::post('/admin/{id}/change_no_hp', [AdminAuthController::class, 'changeNoHp']);
     Route::post('/admin/{id}/request_token_change_password', [AdminAuthController::class, 'requestTokenChangePassword']);
+    Route::delete('/admin', [AdminAuthController::class, 'deleteAll']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::get('/categories/{id}', [CategoryController::class, 'show']);

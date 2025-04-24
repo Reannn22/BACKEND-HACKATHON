@@ -12,8 +12,8 @@ class AdminSeeder extends Seeder
     {
         DB::table('users')->insert([
             'name' => 'Reyhan Capri Moraga',
-            'email' => 'reyhan.123140022@student.itera.ac.idd',
-            'password' => Hash::make('reyhansukaa'), // Changed password
+            'email' => 'reyhan.123140022@student.itera.ac.id',
+            'password' => Hash::make('admin1'), // Changed password
             'role' => 'admin',
             'no_hp' => '082269283309',
             'created_at' => now(),

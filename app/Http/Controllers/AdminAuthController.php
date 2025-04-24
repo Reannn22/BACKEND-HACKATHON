@@ -210,10 +210,10 @@ class AdminAuthController extends Controller
         // Send email using Resend API
         $emailResponse = Http::withoutVerifying()
             ->withHeaders([
-                'Authorization' => 'Bearer re_RS4BGVvJ_FAVdNzRbqjag2BS3C5G5zAMq',
+                'Authorization' => 'Bearer re_YuzCZ8tL_GHWmxBFVLbsGwG2Yrw5F2PnD',
                 'Content-Type' => 'application/json',
             ])->post('https://api.resend.com/emails', [
-                'from' => 'onboarding@resend.dev',
+                'from' => 'LendEase@lendease.my.id',
                 'to' => $request->email,
                 'subject' => 'Reset Password - LendEase',
                 'html' => "<p>Hi there,</p><p>We received a request to reset your password for your <strong>LendEase</strong> account.</p><p>Your password reset token is:</p><h2>{$token}</h2><p>If you didn't request this, you can safely ignore this email.</p><p>Thanks, <br>The LendEase Team</p>"
@@ -428,10 +428,10 @@ class AdminAuthController extends Controller
         // Send email with token
         $emailResponse = Http::withoutVerifying()
             ->withHeaders([
-                'Authorization' => 'Bearer re_RS4BGVvJ_FAVdNzRbqjag2BS3C5G5zAMq',
+                'Authorization' => 'Bearer re_YuzCZ8tL_GHWmxBFVLbsGwG2Yrw5F2PnD',
                 'Content-Type' => 'application/json',
             ])->post('https://api.resend.com/emails', [
-                'from' => 'onboarding@resend.dev',
+                'from' => 'LendEase@lendease.my.id',
                 'to' => $request->email,
                 'subject' => 'Change Password - LendEase',
                 'html' => "<p>Hi there,</p><p>We received a request to change your password for your <strong>LendEase</strong> account.</p><p>Your verification token is:</p><h2>{$token}</h2><p>If you didn't request this, you can safely ignore this email.</p><p>Thanks, <br>The LendEase Team</p>"
@@ -510,10 +510,10 @@ class AdminAuthController extends Controller
             // Send email notification
             Http::withoutVerifying()
                 ->withHeaders([
-                    'Authorization' => 'Bearer re_RS4BGVvJ_FAVdNzRbqjag2BS3C5G5zAMq',
+                    'Authorization' => 'Bearer re_YuzCZ8tL_GHWmxBFVLbsGwG2Yrw5F2PnD',
                     'Content-Type' => 'application/json',
                 ])->post('https://api.resend.com/emails', [
-                    'from' => 'onboarding@resend.dev',
+                    'from' => 'LendEase@lendease.my.id',
                     'to' => $request->email,
                     'subject' => 'Welcome to LendEase - Registration Successful',
                     'html' => "<p>Hi {$request->name},</p><p>Welcome to <strong>LendEase</strong>!</p><p>Your admin account has been successfully registered with this email address.</p><p>You can now log in to your account using your email and password.</p><p>Thanks,<br>The LendEase Team</p>"
@@ -547,6 +547,23 @@ class AdminAuthController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to register admin',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteAll(): JsonResponse
+    {
+        try {
+            $count = User::where('role', 'admin')->count();
+            User::where('role', 'admin')->delete();
+
+            return response()->json([
+                'message' => $count . ' admins have been deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete admins',
                 'error' => $e->getMessage()
             ], 500);
         }
