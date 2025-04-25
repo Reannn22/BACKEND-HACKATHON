@@ -10,6 +10,7 @@ class ItemReview extends Model
 
     protected $fillable = [
         'id_item',
+        'nama_pengguna',
         'rating',
         'komentar'
     ];
@@ -17,5 +18,10 @@ class ItemReview extends Model
     public function item()
     {
         return $this->belongsTo(Item::class, 'id_item');
+    }
+
+    public function fotos()
+    {
+        return $this->hasMany(FotoUlasan::class, 'review_id');
     }
 }
