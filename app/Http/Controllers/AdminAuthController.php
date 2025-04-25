@@ -16,29 +16,20 @@ class AdminAuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required|string'
         ]);
 
-        if (!$token = auth()->attempt($credentials)) {
+        if ($token = auth()->attempt($credentials)) {
             return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
+                'message' => 'Login successful',
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => auth()->factory()->getTTL() * 60,
+                'user' => auth()->user()
+            ]);
         }
 
-        $user = auth()->user();
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], 403);
-        }
-
-        return response()->json([
-            'message' => 'Login successful',
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
-            'user' => $user
-        ]);
+        return response()->json(['message' => 'Invalid credentials'], 401);
     }
 
     public function logout()
