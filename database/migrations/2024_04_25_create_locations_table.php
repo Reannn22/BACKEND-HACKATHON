@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up()
     {
+        // Drop the table if it exists
+        Schema::dropIfExists('locations');
+
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
             $table->string('nama_lokasi');

@@ -9,7 +9,13 @@ return new class extends Migration
     public function up()
     {
         Schema::table('items', function (Blueprint $table) {
-            $table->foreignId('id_kategori')->nullable()->after('id')->constrained('categories');
+            if (!Schema::hasColumn('items', 'id_kategori')) {
+                $table->unsignedBigInteger('id_kategori')->nullable()->after('id');
+                $table->foreign('id_kategori')
+                    ->references('id')
+                    ->on('categories')
+                    ->onDelete('set null');
+            }
         });
     }
 
