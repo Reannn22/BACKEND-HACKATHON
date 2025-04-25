@@ -25,6 +25,7 @@ class Item extends Model
         'warna_barang',
         'kondisi_barang',
         'status_barang',
+        'harga_perolehan',
     ];
 
     protected $appends = ['formatted_weight'];

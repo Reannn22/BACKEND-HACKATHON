@@ -25,6 +25,7 @@ class ItemController extends Controller
         'warna_barang' => 'required|string',
         'kondisi_barang' => 'required|string|in:baru,baik,rusak ringan,rusak berat',
         'status_barang' => 'required|string|in:aktif,non-aktif,dipinjam,dalam perbaikan',
+        'harga_perolehan' => 'required|numeric|min:0',
         'id_admin' => 'required|exists:users,id'
         // Removed jumlah_tersedia from validation rules since it will be set automatically
     ];
@@ -78,6 +79,7 @@ class ItemController extends Controller
             'warna_barang' => $item->warna_barang,
             'kondisi_barang' => $item->kondisi_barang,
             'status_barang' => $item->status_barang,
+            'harga_perolehan' => $item->harga_perolehan,
             'created_at' => $item->created_at,
             'updated_at' => $item->updated_at
         ];
