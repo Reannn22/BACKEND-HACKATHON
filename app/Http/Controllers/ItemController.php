@@ -90,7 +90,7 @@ class ItemController extends Controller
             $validatedData['is_dibawa'] = filter_var($request->is_dibawa, FILTER_VALIDATE_BOOLEAN) ?
                 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
             $validatedData['berat_barang'] = (int) $request->berat_barang;
-            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang']; // Set equal to jumlah_barang
+            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
             $validatedData['deskripsi_barang'] = $request->input('deskripsi_barang', '');
             $validatedData['lokasi_barang'] = $request->input('lokasi_barang', '');
 
@@ -109,10 +109,11 @@ class ItemController extends Controller
                 }
             }
 
-            $item->refresh();
+            $item->load(['category', 'foto_barang']);
+            
             return response()->json([
                 'message' => 'Item created successfully',
-                'data' => $item
+                'data' => $this->formatItemResponse($item)
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
