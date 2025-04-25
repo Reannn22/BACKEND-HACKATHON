@@ -23,6 +23,7 @@ class ItemController extends Controller
         'id_kategori' => 'required|integer',  // Added this line
         'is_dibawa' => 'required|in:true,false,1,0',  // Accept string "true"/"false" or 1/0
         'berat_barang' => 'required|string',
+        'warna_barang' => 'required|string',
         'foto_barang.*' => 'required|file|mimes:jpg,jpeg,png|max:2048'
     ];
 
@@ -55,6 +56,7 @@ class ItemController extends Controller
             'nama_kategori' => $item->category ? $item->category->nama_kategori : null,
             'is_dibawa' => $item->is_dibawa,
             'berat_barang' => $this->formatWeight($item->berat_barang),
+            'warna_barang' => $item->warna_barang,
             'created_at' => $item->created_at,
             'updated_at' => $item->updated_at
         ];
@@ -89,6 +91,9 @@ class ItemController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            // Debug request
+            \Log::info('Request files:', ['files' => $request->allFiles()]);
+
             $validatedData = $request->validate($this->rules);
 
             // Set defaults and convert values
@@ -104,25 +109,40 @@ class ItemController extends Controller
                 $item = Item::create($validatedData);
 
                 if ($request->hasFile('foto_barang')) {
-                    foreach ($request->file('foto_barang') as $photo) {
+                    \Log::info('Processing foto_barang files');
+                    $photos = $request->file('foto_barang');
+                    if (!is_array($photos)) {
+                        $photos = [$photos];
+                    }
+
+                    foreach ($photos as $photo) {
                         if ($photo->isValid()) {
                             $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                             $photo->storeAs('public/foto_barang', $filename);
-                            
+
+                            \Log::info('Creating foto record', ['filename' => $filename]);
                             $item->foto_barang()->create([
                                 'foto_path' => $filename
                             ]);
+                        } else {
+                            \Log::error('Invalid file uploaded', ['file' => $photo]);
                         }
                     }
+                } else {
+                    \Log::info('No foto_barang files found in request');
                 }
-                
+
                 \DB::commit();
             } catch (\Exception $e) {
                 \DB::rollback();
+                \Log::error('Error in transaction', ['error' => $e->getMessage()]);
                 throw $e;
             }
 
             $item->load(['category', 'foto_barang']);
+
+            // Debug final item
+            \Log::info('Final item data:', ['item' => $item->toArray()]);
 
             return response()->json([
                 'message' => 'Item created successfully',

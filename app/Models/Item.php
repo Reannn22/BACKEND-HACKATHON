@@ -20,7 +20,8 @@ class Item extends Model
         'lokasi_barang',
         'id_kategori',
         'is_dibawa',
-        'berat_barang'
+        'berat_barang',
+        'warna_barang'
     ];
 
     protected $appends = ['formatted_weight'];
@@ -47,6 +48,7 @@ class Item extends Model
             'id_kategori' => $array['id_kategori'],
             'is_dibawa' => $array['is_dibawa'],
             'berat_barang' => $array['formatted_weight'],
+            'warna_barang' => $array['warna_barang'],
             'created_at' => $array['created_at'],
             'updated_at' => $array['updated_at'],
             'id' => $array['id']
