@@ -112,6 +112,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/items_reviews/{id}', [ItemReviewController::class, 'show']);
     Route::put('/items_reviews/{id}', [ItemReviewController::class, 'update']);
     Route::delete('/items_reviews/{id}', [ItemReviewController::class, 'destroy']);
+    Route::delete('/items_reviews', [ItemReviewController::class, 'deleteAll']);
 
     // Room Reviews routes
     Route::get('/rooms_reviews', [RoomReviewController::class, 'index']);

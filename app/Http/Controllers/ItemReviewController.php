@@ -69,20 +69,14 @@ class ItemReviewController extends Controller
                     $files = [$files];
                 }
 
-                // Reset auto-increment for this review's photos
-                \DB::statement('SET @foto_id = 0');
-                
-                foreach ($files as $index => $photo) {
+                foreach ($files as $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                         $path = $photo->storeAs('public/foto_ulasan', $filename);
-
-                        // Create foto with manual ID increment
-                        $foto = new FotoUlasan([
+                        
+                        $review->fotos()->create([
                             'foto_path' => $filename
                         ]);
-                        $foto->id = $index + 1; // Manual ID assignment
-                        $review->fotos()->save($foto);
                     }
                 }
             }
@@ -155,6 +149,39 @@ class ItemReviewController extends Controller
                 'message' => 'Failed to delete review',
                 'error' => $e->getMessage()
             ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
+        }
+    }
+
+    public function deleteAll(): JsonResponse
+    {
+        try {
+            // Disable foreign key checks
+            \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+            // Delete all photos first
+            FotoUlasan::truncate();
+            
+            // Delete all reviews
+            ItemReview::truncate();
+
+            // Reset auto-increment on both tables
+            \DB::statement('ALTER TABLE reviews AUTO_INCREMENT = 1');
+            \DB::statement('ALTER TABLE foto_ulasans AUTO_INCREMENT = 1');
+
+            // Re-enable foreign key checks
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+            return response()->json([
+                'message' => 'All reviews deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            // Make sure to re-enable foreign key checks even if there's an error
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            
+            return response()->json([
+                'message' => 'Failed to delete all reviews',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
