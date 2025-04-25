@@ -21,7 +21,7 @@ class ItemController extends Controller
         'jumlah_tersedia' => 'nullable|integer|min:0',
         'lokasi_barang' => 'nullable|string',
         'nama_kategori' => 'nullable|string',
-        'is_dibawa' => 'required|boolean', // Changed to boolean
+        'is_dibawa' => 'required|in:true,false,1,0',  // Accept string "true"/"false" or 1/0
         'berat_barang' => 'required|string',
         'foto_barang.*' => 'required|file|mimes:jpg,jpeg,png|max:2048'
     ];
@@ -78,19 +78,20 @@ class ItemController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            // Validate basic data
             $validatedData = $request->validate($this->rules);
 
             // Convert boolean to string
-            $validatedData['is_dibawa'] = $validatedData['is_dibawa'] ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
+            $validatedData['is_dibawa'] = filter_var($request->is_dibawa, FILTER_VALIDATE_BOOLEAN) ?
+                'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
 
-            // Set jumlah_tersedia to jumlah_barang if not provided
+            // Ensure berat_barang is string
+            $validatedData['berat_barang'] = (string) $request->berat_barang;
+
+            // Set default jumlah_tersedia
             $validatedData['jumlah_tersedia'] = $request->input('jumlah_tersedia', $validatedData['jumlah_barang']);
 
-            // Create item
             $item = Item::create($validatedData);
 
-            // Handle file uploads
             if ($request->hasFile('foto_barang')) {
                 foreach ($request->file('foto_barang') as $photo) {
                     if ($photo->isValid()) {
