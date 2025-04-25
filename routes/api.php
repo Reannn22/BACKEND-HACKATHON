@@ -77,7 +77,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/rooms_categories/{id}', [RoomCategoryController::class, 'destroy']);
     Route::delete('/rooms_categories', [RoomCategoryController::class, 'deleteAll']);
 
-    // Validations routess
+    // Validations routes
     Route::get('/validations', [ValidationController::class, 'index']);
     Route::post('/validations', [ValidationController::class, 'store']);
     Route::get('/validations/{id}', [ValidationController::class, 'show']);
