@@ -86,8 +86,13 @@ class ItemController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            // Convert weight to grams for storage
+            // Set defaults and convert values
+            $validatedData['is_dibawa'] = filter_var($request->is_dibawa, FILTER_VALIDATE_BOOLEAN) ?
+                'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
             $validatedData['berat_barang'] = (int) $request->berat_barang;
+            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang']; // Set equal to jumlah_barang
+            $validatedData['deskripsi_barang'] = $request->input('deskripsi_barang', '');
+            $validatedData['lokasi_barang'] = $request->input('lokasi_barang', '');
 
             $item = Item::create($validatedData);
 
