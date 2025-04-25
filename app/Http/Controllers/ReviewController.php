@@ -18,16 +18,18 @@ class ReviewController extends Controller
         'foto_ulasan.*' => 'nullable|file|mimes:jpg,jpeg,png|max:2048'
     ];
 
-    private function formatResponse($review)
+    private function formatReviewResponse($review)
     {
         return [
             'id' => $review->id,
             'id_item' => $review->id_item,
             'nama_pengguna' => $review->nama_pengguna,
-            'foto_ulasan' => $review->fotos->map(fn($foto) => [
-                'id' => $foto->id,
-                'foto_path' => $foto->foto_path
-            ]),
+            'foto_ulasan' => $review->fotos ? $review->fotos->map(function($foto) {
+                return [
+                    'id' => $foto->id,
+                    'foto_path' => asset('storage/foto_ulasan/' . $foto->foto_path)
+                ];
+            }) : [],
             'rating' => $review->rating,
             'komentar' => $review->komentar,
             'created_at' => $review->created_at,
@@ -41,7 +43,7 @@ class ReviewController extends Controller
             $reviews = ItemReview::with(['item', 'fotos'])->get();
             return response()->json([
                 'message' => 'Reviews retrieved successfully',
-                'data' => $reviews->map(fn($review) => $this->formatResponse($review))
+                'data' => $reviews->map(fn($review) => $this->formatReviewResponse($review))
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -86,7 +88,7 @@ class ReviewController extends Controller
 
             return response()->json([
                 'message' => 'Review created successfully',
-                'data' => $this->formatResponse($review)
+                'data' => $this->formatReviewResponse($review)
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -107,7 +109,7 @@ class ReviewController extends Controller
             $review = ItemReview::with(['item', 'fotos'])->findOrFail($id);
             return response()->json([
                 'message' => 'Review retrieved successfully',
-                'data' => $this->formatResponse($review)
+                'data' => $this->formatReviewResponse($review)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -126,7 +128,7 @@ class ReviewController extends Controller
             $review->update($request->all());
             return response()->json([
                 'message' => 'Review updated successfully',
-                'data' => $this->formatResponse($review)
+                'data' => $this->formatReviewResponse($review)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
