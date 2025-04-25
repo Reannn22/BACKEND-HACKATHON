@@ -20,7 +20,7 @@ class ItemController extends Controller
         'jumlah_barang' => 'required|integer|min:0',
         'jumlah_tersedia' => 'nullable|integer|min:0',
         'lokasi_barang' => 'nullable|string',
-        'nama_kategori' => 'nullable|string',
+        'id_kategori' => 'required|integer',  // Added this line
         'is_dibawa' => 'required|in:true,false,1,0',  // Accept string "true"/"false" or 1/0
         'berat_barang' => 'required|string',
         'foto_barang.*' => 'required|file|mimes:jpg,jpeg,png|max:2048'
@@ -89,6 +89,9 @@ class ItemController extends Controller
 
             // Set default jumlah_tersedia
             $validatedData['jumlah_tersedia'] = $request->input('jumlah_tersedia', $validatedData['jumlah_barang']);
+
+            // Include id_kategori from request
+            $validatedData['id_kategori'] = $request->id_kategori;
 
             $item = Item::create($validatedData);
 

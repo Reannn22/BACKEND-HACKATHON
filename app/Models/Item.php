@@ -16,6 +16,7 @@ class Item extends Model
         'jumlah_tersedia',
         'lokasi_barang',
         'nama_kategori',
+        'id_kategori',
         'is_dibawa',
         'berat_barang'
     ];
