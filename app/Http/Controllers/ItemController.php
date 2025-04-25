@@ -7,6 +7,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class ItemController extends Controller
 {
@@ -32,13 +33,34 @@ class ItemController extends Controller
         return $weight . ' g';
     }
 
+    private function formatItemResponse($item)
+    {
+        return [
+            'id' => $item->id,
+            'nama_barang' => $item->nama_barang,
+            'kode_barang' => $item->kode_barang,
+            'merek_barang' => $item->merek_barang,
+            'tahun_pengadaan' => $item->tahun_pengadaan,
+            'gambar_barang' => $item->gambar_barang,
+            'deskripsi_barang' => $item->deskripsi_barang,
+            'jumlah_barang' => $item->jumlah_barang,
+            'jumlah_tersedia' => $item->jumlah_tersedia,
+            'lokasi_barang' => $item->lokasi_barang,
+            'nama_kategori' => $item->category->nama_kategori,
+            'is_dibawa' => $item->is_dibawa ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang',
+            'berat_barang' => $this->formatWeight($item->berat_barang),
+            'created_at' => $item->created_at,
+            'updated_at' => $item->updated_at
+        ];
+    }
+
     public function index(): JsonResponse
     {
         try {
-            $items = Item::all();
+            $items = Item::with('category')->get();
             return response()->json([
                 'message' => 'Items retrieved successfully',
-                'data' => $items
+                'data' => $items->map(fn($item) => $this->formatItemResponse($item))
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -70,27 +92,11 @@ class ItemController extends Controller
             $item = Item::create($validatedData);
 
             // Load category with category name
-            $category = Category::find($validatedData['id_kategori']);
+            $item->load('category');
 
             return response()->json([
                 'message' => 'Item created successfully',
-                'data' => [
-                    'id' => $item->id,
-                    'nama_barang' => $item->nama_barang,
-                    'kode_barang' => $item->kode_barang,
-                    'merek_barang' => $item->merek_barang,
-                    'tahun_pengadaan' => $item->tahun_pengadaan,
-                    'gambar_barang' => $item->gambar_barang,
-                    'deskripsi_barang' => $item->deskripsi_barang,
-                    'jumlah_barang' => $item->jumlah_barang,
-                    'jumlah_tersedia' => $item->jumlah_tersedia,
-                    'lokasi_barang' => $item->lokasi_barang,
-                    'nama_kategori' => $category->nama_kategori,
-                    'is_dibawa' => $item->is_dibawa ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang',
-                    'berat_barang' => $this->formatWeight($item->berat_barang),
-                    'created_at' => $item->created_at,
-                    'updated_at' => $item->updated_at
-                ]
+                'data' => $this->formatItemResponse($item)
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -103,10 +109,10 @@ class ItemController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $item = Item::findOrFail($id);
+            $item = Item::with('category')->findOrFail($id);
             return response()->json([
                 'message' => 'Item retrieved successfully',
-                'data' => $item
+                'data' => $this->formatItemResponse($item)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -122,15 +128,25 @@ class ItemController extends Controller
             $item = Item::findOrFail($id);
             $validatedData = $request->validate($this->rules);
 
-            $item->update([
-                'nama_barang' => $validatedData['nama_barang'],
-                'kode_barang' => $validatedData['kode_barang'],
-                'merk_barang' => $validatedData['merk_barang']
-            ]);
+            if ($request->hasFile('gambar_barang')) {
+                // Delete old image if exists
+                if ($item->gambar_barang) {
+                    Storage::delete('public/gambar_barang/' . $item->gambar_barang);
+                }
+
+                $file = $request->file('gambar_barang');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->storeAs('public/gambar_barang', $filename);
+                $validatedData['gambar_barang'] = $filename;
+            }
+
+            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
+            $item->update($validatedData);
+            $item->load('category');
 
             return response()->json([
                 'message' => 'Item updated successfully',
-                'data' => $item
+                'data' => $this->formatItemResponse($item)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -153,6 +169,21 @@ class ItemController extends Controller
                 'message' => 'Failed to delete item',
                 'error' => $e->getMessage()
             ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
+        }
+    }
+
+    public function deleteAll(): JsonResponse
+    {
+        try {
+            Item::truncate();
+            return response()->json([
+                'message' => 'All items deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete all items',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

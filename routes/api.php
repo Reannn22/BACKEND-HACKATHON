@@ -47,6 +47,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/items/{id}', [ItemController::class, 'show']);
     Route::put('/items/{id}', [ItemController::class, 'update']);
     Route::delete('/items/{id}', [ItemController::class, 'destroy']);
+    Route::delete('/items', [ItemController::class, 'deleteAll']);
 
     // Items Detail routes
     Route::get('/items_detail', [ItemDetailController::class, 'index']);
