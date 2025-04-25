@@ -26,7 +26,7 @@ class Item extends Model
         return $this->belongsTo(Category::class, 'id_kategori');
     }
 
-    public function fotos()
+    public function foto_barang()
     {
         return $this->hasMany(FotoBarang::class);
     }
