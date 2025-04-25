@@ -123,9 +123,11 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/rooms_reviews/{id}', [RoomReviewController::class, 'destroy']);
 
     // Locations routes
-    Route::get('/locations', [LocationController::class, 'index']);
-    Route::post('/locations', [LocationController::class, 'store']);
-    Route::get('/locations/{id}', [LocationController::class, 'show']);
-    Route::put('/locations/{id}', [LocationController::class, 'update']);
-    Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
+    Route::middleware('api')->group(function() {
+        Route::get('/locations', [LocationController::class, 'index']);
+        Route::post('/locations', [LocationController::class, 'store']);
+        Route::get('/locations/{id}', [LocationController::class, 'show']);
+        Route::put('/locations/{id}', [LocationController::class, 'update']);
+        Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
+    });
 });
