@@ -12,9 +12,28 @@ class ItemReviewController extends Controller
 {
     protected $rules = [
         'id_item' => 'required|exists:items,id',
+        'nama_pengguna' => 'required|string|max:255',
         'rating' => 'required|integer|min:1|max:5',
-        'komentar' => 'required|string|max:255'
+        'komentar' => 'required|string|max:255',
+        'foto_ulasan.*' => 'nullable|file|mimes:jpg,jpeg,png|max:2048'
     ];
+
+    private function formatResponse($review)
+    {
+        return [
+            'id' => $review->id,
+            'id_item' => $review->id_item,
+            'nama_pengguna' => $review->nama_pengguna,
+            'foto_ulasan' => $review->fotos->map(fn($foto) => [
+                'id' => $foto->id,
+                'foto_path' => $foto->foto_path
+            ]),
+            'rating' => $review->rating,
+            'komentar' => $review->komentar,
+            'created_at' => $review->created_at,
+            'updated_at' => $review->updated_at
+        ];
+    }
 
     public function index(): JsonResponse
     {
@@ -37,11 +56,51 @@ class ItemReviewController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            $review = ItemReview::create($validatedData);
+            \Log::info('File upload debug:', [
+                'hasFile' => $request->hasFile('foto_ulasan'),
+                'files' => $request->file('foto_ulasan')
+            ]);
+
+            $review = ItemReview::create([
+                'id_item' => $request->id_item,
+                'nama_pengguna' => $request->nama_pengguna,
+                'rating' => $request->rating,
+                'komentar' => $request->komentar
+            ]);
+
+            if ($request->hasFile('foto_ulasan')) {
+                $files = $request->file('foto_ulasan');
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+
+                foreach ($files as $photo) {
+                    \Log::info('Processing file:', [
+                        'valid' => $photo->isValid(),
+                        'original_name' => $photo->getClientOriginalName()
+                    ]);
+
+                    if ($photo->isValid()) {
+                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
+                        $path = $photo->storeAs('public/foto_ulasan', $filename);
+
+                        \Log::info('File stored:', ['path' => $path]);
+
+                        $foto = $review->fotos()->create([
+                            'foto_path' => $filename
+                        ]);
+
+                        \Log::info('Foto record created:', ['foto_id' => $foto->id]);
+                    }
+                }
+            }
+
+            $review->refresh();
+            $review->load('fotos');
 
             return response()->json([
                 'message' => 'Review created successfully',
-                'data' => $review
+                'data' => $this->formatResponse($review)
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([

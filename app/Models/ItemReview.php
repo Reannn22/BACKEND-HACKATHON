@@ -15,8 +15,6 @@ class ItemReview extends Model
         'komentar'
     ];
 
-    protected $with = ['fotos']; // Eager load fotos by default
-
     public function fotos()
     {
         return $this->hasMany(FotoUlasan::class, 'review_id');
