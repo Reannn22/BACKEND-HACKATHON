@@ -93,13 +93,15 @@ class ItemController extends Controller
             $validatedData['jumlah_tersedia'] = $request->input('jumlah_tersedia', $validatedData['jumlah_barang']);
             $validatedData['deskripsi_barang'] = $request->input('deskripsi_barang', '');
             $validatedData['lokasi_barang'] = $request->input('lokasi_barang', '');
-            $validatedData['gambar_barang'] = null; // Set default null for gambar_barang
 
             $item = Item::create($validatedData);
 
-            // Handle file uploads
             if ($request->hasFile('foto_barang')) {
                 $files = $request->file('foto_barang');
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+
                 foreach ($files as $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
@@ -110,11 +112,13 @@ class ItemController extends Controller
                         ]);
                     }
                 }
+
+                $item->refresh();
             }
 
             return response()->json([
                 'message' => 'Item created successfully',
-                'data' => $this->formatResponse($item)
+                'data' => $item
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([

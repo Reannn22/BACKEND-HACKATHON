@@ -15,11 +15,15 @@ class Item extends Model
         'jumlah_barang',
         'jumlah_tersedia',
         'lokasi_barang',
-        'nama_kategori',
         'id_kategori',
         'is_dibawa',
-        'berat_barang'
+        'berat_barang',
+        'foto_barang'  // Changed from gambar_barang
     ];
+
+    protected $hidden = ['gambar_barang']; // Hide old column name
+
+    protected $with = ['foto_barang']; // Add this line to eager load photos
 
     public function category()
     {
@@ -28,6 +32,6 @@ class Item extends Model
 
     public function foto_barang()
     {
-        return $this->hasMany(FotoBarang::class);
+        return $this->hasMany(FotoBarang::class, 'item_id');
     }
 }
