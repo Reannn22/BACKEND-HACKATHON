@@ -230,10 +230,23 @@ class ItemController extends Controller
     public function deleteAll(): JsonResponse
     {
         try {
-            Item::truncate();
-            return response()->json([
-                'message' => 'All items deleted successfully'
-            ], 200);
+            \DB::beginTransaction();
+            try {
+                // Delete all foto_barang records first
+                \DB::table('foto_barang')->delete();
+                
+                // Now safe to delete all items
+                Item::truncate();
+                
+                \DB::commit();
+                
+                return response()->json([
+                    'message' => 'All items deleted successfully'
+                ], 200);
+            } catch (\Exception $e) {
+                \DB::rollback();
+                throw $e;
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete all items',
