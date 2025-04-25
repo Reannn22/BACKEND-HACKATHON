@@ -42,12 +42,6 @@ class Item extends Model
             'kode_barang' => $array['kode_barang'],
             'merek_barang' => $array['merek_barang'],
             'tahun_pengadaan' => $array['tahun_pengadaan'],
-            'foto_barang' => $this->foto_barang ? $this->foto_barang->map(function($foto) {
-                return [
-                    'id' => $foto->id,
-                    'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
-                ];
-            }) : [],
             'deskripsi_barang' => $array['deskripsi_barang'],
             'jumlah_barang' => $array['jumlah_barang'],
             'jumlah_tersedia' => $array['jumlah_tersedia'],
@@ -61,11 +55,24 @@ class Item extends Model
                 'gedung' => $this->location->gedung,
                 'ruangan' => $this->location->ruangan
             ] : null,
-            'id_kategori' => $array['id_kategori'],
-            'id_lokasi' => $array['id_lokasi'],
+            'admin' => $this->admin ? [
+                'id' => $this->admin->id,
+                'name' => $this->admin->name,
+                'email' => $this->admin->email,
+                'role' => $this->admin->role,
+                'no_hp' => $this->admin->no_hp,
+                'created_at' => $this->admin->created_at,
+                'updated_at' => $this->admin->updated_at
+            ] : null,
             'is_dibawa' => $array['is_dibawa'],
             'berat_barang' => $array['formatted_weight'],
             'warna_barang' => $array['warna_barang'],
+            'foto_barang' => $this->foto_barang ? $this->foto_barang->map(function($foto) {
+                return [
+                    'id' => $foto->id,
+                    'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
+                ];
+            }) : [],
             'created_at' => $array['created_at'],
             'updated_at' => $array['updated_at']
         ];
