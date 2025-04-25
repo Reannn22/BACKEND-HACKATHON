@@ -57,6 +57,8 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'ssl_ca' => env('MYSQL_ATTR_SSL_CA'),
+            'ssl_verify_server_cert' => env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT', true),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT', true),
