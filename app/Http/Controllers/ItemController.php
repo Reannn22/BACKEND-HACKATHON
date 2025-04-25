@@ -19,7 +19,8 @@ class ItemController extends Controller
         'deskripsi_barang' => 'required|string',
         'jumlah_barang' => 'required|integer|min:0',
         'lokasi_barang' => 'required|string|max:255',
-        'id_kategori' => 'required|exists:categories,id'
+        'id_kategori' => 'required|exists:categories,id',
+        'is_dibawa' => 'required|in:true,false,0,1'
     ];
 
     public function index(): JsonResponse
@@ -42,6 +43,9 @@ class ItemController extends Controller
     {
         try {
             $validatedData = $request->validate($this->rules);
+
+            // Convert is_dibawa to boolean
+            $validatedData['is_dibawa'] = filter_var($validatedData['is_dibawa'], FILTER_VALIDATE_BOOLEAN);
 
             // Handle file upload
             if ($request->hasFile('gambar_barang')) {
@@ -73,6 +77,7 @@ class ItemController extends Controller
                     'jumlah_tersedia' => $item->jumlah_tersedia,
                     'lokasi_barang' => $item->lokasi_barang,
                     'nama_kategori' => $category->nama_kategori,
+                    'is_dibawa' => $item->is_dibawa ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang',
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ]
