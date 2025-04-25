@@ -20,8 +20,17 @@ class ItemController extends Controller
         'jumlah_barang' => 'required|integer|min:0',
         'lokasi_barang' => 'required|string|max:255',
         'id_kategori' => 'required|exists:categories,id',
-        'is_dibawa' => 'required|in:true,false,0,1'
+        'is_dibawa' => 'required|in:true,false,0,1',
+        'berat_barang' => 'required|numeric|min:0'
     ];
+
+    private function formatWeight($weight)
+    {
+        if ($weight >= 1000) {
+            return ($weight / 1000) . ' kg';
+        }
+        return $weight . ' g';
+    }
 
     public function index(): JsonResponse
     {
@@ -78,6 +87,7 @@ class ItemController extends Controller
                     'lokasi_barang' => $item->lokasi_barang,
                     'nama_kategori' => $category->nama_kategori,
                     'is_dibawa' => $item->is_dibawa ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang',
+                    'berat_barang' => $this->formatWeight($item->berat_barang),
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ]

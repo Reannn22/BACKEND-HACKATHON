@@ -17,7 +17,8 @@ class Item extends Model
         'jumlah_tersedia',
         'lokasi_barang',
         'id_kategori',
-        'is_dibawa'
+        'is_dibawa',
+        'berat_barang'
     ];
 
     public function category()
