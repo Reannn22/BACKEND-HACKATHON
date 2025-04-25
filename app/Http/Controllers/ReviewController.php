@@ -55,7 +55,12 @@ class ReviewController extends Controller
     {
         try {
             $validatedData = $request->validate($this->rules);
-            
+
+            \Log::info('Request files:', [
+                'has_files' => $request->hasFile('foto_ulasan'),
+                'files' => $request->file('foto_ulasan')
+            ]);
+
             $review = ItemReview::create([
                 'id_item' => $request->id_item,
                 'nama_pengguna' => $request->nama_pengguna,
@@ -65,19 +70,27 @@ class ReviewController extends Controller
 
             if ($request->hasFile('foto_ulasan')) {
                 $files = $request->file('foto_ulasan');
-                foreach ($files as $photo) {
+                foreach ($files as $index => $photo) {
+                    \Log::info('Processing file:', ['index' => $index, 'isValid' => $photo->isValid()]);
+
                     if ($photo->isValid()) {
-                        $filename = time() . '_' . $photo->getClientOriginalName();
+                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                         $photo->storeAs('public/foto_ulasan', $filename);
-                        
-                        $review->fotos()->create([
+
+                        $foto = new FotoUlasan([
+                            'review_id' => $review->id,
                             'foto_path' => $filename
                         ]);
+                        $foto->save();
+
+                        \Log::info('Saved photo:', ['filename' => $filename]);
                     }
                 }
             }
 
+            $review->refresh();
             $review->load('fotos');
+
             return response()->json([
                 'message' => 'Review created successfully',
                 'data' => $this->formatResponse($review)
