@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class ReviewController extends Controller
+class ItemReviewController extends Controller
 {
     protected $rules = [
         'id_item' => 'required|exists:items,id',
@@ -18,18 +18,16 @@ class ReviewController extends Controller
         'foto_ulasan.*' => 'nullable|file|mimes:jpg,jpeg,png|max:2048'
     ];
 
-    private function formatReviewResponse($review)
+    private function formatResponse($review)
     {
         return [
             'id' => $review->id,
             'id_item' => $review->id_item,
             'nama_pengguna' => $review->nama_pengguna,
-            'foto_ulasan' => $review->foto_ulasan ? $review->foto_ulasan->map(function($foto) {
-                return [
-                    'id' => $foto->id,
-                    'foto_path' => asset('storage/foto_ulasan/' . $foto->foto_path)
-                ];
-            }) : [],
+            'foto_ulasan' => $review->fotos->map(fn($foto) => [
+                'id' => $foto->id,
+                'foto_path' => asset('storage/foto_ulasan/' . $foto->foto_path)
+            ]),
             'rating' => $review->rating,
             'komentar' => $review->komentar,
             'created_at' => $review->created_at,
@@ -43,7 +41,7 @@ class ReviewController extends Controller
             $reviews = ItemReview::with(['item', 'fotos'])->get();
             return response()->json([
                 'message' => 'Reviews retrieved successfully',
-                'data' => $reviews->map(fn($review) => $this->formatReviewResponse($review))
+                'data' => $reviews
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -72,23 +70,23 @@ class ReviewController extends Controller
                 }
 
                 foreach ($files as $photo) {
-                    if ($photo && $photo->isValid()) {
+                    if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
-                        $photo->storeAs('public/foto_ulasan', $filename);
+                        $path = $photo->storeAs('public/foto_ulasan', $filename);
 
                         $review->fotos()->create([
                             'foto_path' => $filename
                         ]);
                     }
                 }
-
-                // Force refresh the model with its relationships
-                $review->load('foto_ulasan');
             }
+
+            $review->refresh();
+            $review->load('fotos');
 
             return response()->json([
                 'message' => 'Review created successfully',
-                'data' => $this->formatReviewResponse($review)
+                'data' => $this->formatResponse($review)
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -103,13 +101,13 @@ class ReviewController extends Controller
         }
     }
 
-    public function show($id): JsonResponse
+    public function show(int $id): JsonResponse
     {
         try {
-            $review = ItemReview::with(['item', 'fotos'])->findOrFail($id);
+            $review = ItemReview::findOrFail($id);
             return response()->json([
                 'message' => 'Review retrieved successfully',
-                'data' => $this->formatReviewResponse($review)
+                'data' => $review
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -128,7 +126,7 @@ class ReviewController extends Controller
             $review->update($request->all());
             return response()->json([
                 'message' => 'Review updated successfully',
-                'data' => $this->formatReviewResponse($review)
+                'data' => $review
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -151,6 +149,39 @@ class ReviewController extends Controller
                 'message' => 'Failed to delete review',
                 'error' => $e->getMessage()
             ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
+        }
+    }
+
+    public function deleteAll(): JsonResponse
+    {
+        try {
+            // Disable foreign key checks
+            \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+            // Delete all photos first
+            FotoUlasan::truncate();
+
+            // Delete all reviews
+            ItemReview::truncate();
+
+            // Reset auto-increment on both tables
+            \DB::statement('ALTER TABLE reviews AUTO_INCREMENT = 1');
+            \DB::statement('ALTER TABLE foto_ulasans AUTO_INCREMENT = 1');
+
+            // Re-enable foreign key checks
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+            return response()->json([
+                'message' => 'All reviews deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            // Make sure to re-enable foreign key checks even if there's an error
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+            return response()->json([
+                'message' => 'Failed to delete all reviews',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
