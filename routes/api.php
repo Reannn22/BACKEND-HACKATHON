@@ -15,6 +15,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ItemReviewController;
 use App\Http\Controllers\RoomReviewController;
 use App\Http\Controllers\RoomCategoryController;
+use App\Http\Controllers\LocationController;
 
 Route::post('/admin/login', [AdminAuthController::class, 'login']); // user dapat login sebagai admin
 Route::post('/admin/request_token_forget_password', [AdminAuthController::class, 'requestTokenForgetPassword']);
@@ -120,4 +121,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/rooms_reviews/{id}', [RoomReviewController::class, 'show']);
     Route::put('/rooms_reviews/{id}', [RoomReviewController::class, 'update']);
     Route::delete('/rooms_reviews/{id}', [RoomReviewController::class, 'destroy']);
+
+    // Locations routes
+    Route::get('/locations', [LocationController::class, 'index']);
+    Route::post('/locations', [LocationController::class, 'store']);
+    Route::get('/locations/{id}', [LocationController::class, 'show']);
+    Route::put('/locations/{id}', [LocationController::class, 'update']);
+    Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
 });
