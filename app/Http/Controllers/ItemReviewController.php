@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Review;
+use App\Models\ItemReview;
+use App\Models\FotoUlasan;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class ReviewController extends Controller
+class ItemReviewController extends Controller
 {
     protected $rules = [
         'id_item' => 'required|exists:items,id',
@@ -18,7 +19,7 @@ class ReviewController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $reviews = Review::all();
+            $reviews = ItemReview::with(['item', 'fotos'])->get();
             return response()->json([
                 'message' => 'Reviews retrieved successfully',
                 'data' => $reviews
@@ -36,7 +37,7 @@ class ReviewController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            $review = Review::create($validatedData);
+            $review = ItemReview::create($validatedData);
 
             return response()->json([
                 'message' => 'Review created successfully',
@@ -58,7 +59,7 @@ class ReviewController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $review = Review::findOrFail($id);
+            $review = ItemReview::findOrFail($id);
             return response()->json([
                 'message' => 'Review retrieved successfully',
                 'data' => $review
@@ -74,7 +75,7 @@ class ReviewController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         try {
-            $review = Review::findOrFail($id);
+            $review = ItemReview::findOrFail($id);
             $request->validate($this->rules);
 
             $review->update($request->all());
@@ -93,7 +94,7 @@ class ReviewController extends Controller
     public function destroy(int $id): JsonResponse
     {
         try {
-            $review = Review::findOrFail($id);
+            $review = ItemReview::findOrFail($id);
             $review->delete();
             return response()->json([
                 'message' => 'Review deleted successfully'

@@ -12,7 +12,7 @@ use App\Http\Controllers\BorrowingController;
 use App\Http\Controllers\ItemDetailController;
 use App\Http\Controllers\RoomDetailController;
 use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ItemReviewController;
 use App\Http\Controllers\RoomReviewController;
 use App\Http\Controllers\RoomCategoryController;
 
@@ -107,11 +107,11 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/activities_log/{id}', [ActivityLogController::class, 'destroy']);
 
     // Reviews routes (renamed to Items Reviews)
-    Route::get('/items_reviews', [ReviewController::class, 'index']);
-    Route::post('/items_reviews', [ReviewController::class, 'store']);
-    Route::get('/items_reviews/{id}', [ReviewController::class, 'show']);
-    Route::put('/items_reviews/{id}', [ReviewController::class, 'update']);
-    Route::delete('/items_reviews/{id}', [ReviewController::class, 'destroy']);
+    Route::get('/items_reviews', [ItemReviewController::class, 'index']);
+    Route::post('/items_reviews', [ItemReviewController::class, 'store']);
+    Route::get('/items_reviews/{id}', [ItemReviewController::class, 'show']);
+    Route::put('/items_reviews/{id}', [ItemReviewController::class, 'update']);
+    Route::delete('/items_reviews/{id}', [ItemReviewController::class, 'destroy']);
 
     // Room Reviews routes
     Route::get('/rooms_reviews', [RoomReviewController::class, 'index']);
