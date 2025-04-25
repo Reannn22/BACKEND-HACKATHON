@@ -80,26 +80,31 @@ class ItemController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            // Convert boolean to string
+            // Set defaults and convert values
             $validatedData['is_dibawa'] = filter_var($request->is_dibawa, FILTER_VALIDATE_BOOLEAN) ?
                 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
-
-            // Ensure berat_barang is string
             $validatedData['berat_barang'] = (string) $request->berat_barang;
-
-            // Set default jumlah_tersedia
             $validatedData['jumlah_tersedia'] = $request->input('jumlah_tersedia', $validatedData['jumlah_barang']);
-
-            // Include id_kategori from request
-            $validatedData['id_kategori'] = $request->id_kategori;
+            $validatedData['deskripsi_barang'] = $request->input('deskripsi_barang', '');
+            $validatedData['gambar_barang'] = null; // Set default null for gambar_barang
 
             $item = Item::create($validatedData);
 
             if ($request->hasFile('foto_barang')) {
-                foreach ($request->file('foto_barang') as $photo) {
+                $files = $request->file('foto_barang');
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+
+                foreach ($files as $index => $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                         $photo->storeAs('public/foto_barang', $filename);
+
+                        // Store first photo as gambar_barang
+                        if ($index === 0) {
+                            $item->update(['gambar_barang' => $filename]);
+                        }
 
                         $item->fotos()->create([
                             'foto_path' => $filename
