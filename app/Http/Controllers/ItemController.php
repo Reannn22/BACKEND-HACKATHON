@@ -10,11 +10,14 @@ use Illuminate\Validation\ValidationException;
 class ItemController extends Controller
 {
     protected $rules = [
-        'nama_barang' => 'required|string|max:255', // text
-        'kode_barang' => 'required|string|max:255|unique:items,kode_barang', // text
-        'merek_barang' => 'required|string|max:255', // text
-        'tahun_pengadaan' => 'required|numeric|digits:4', // text (year)
-        'gambar_barang' => 'required|file|mimes:jpg,jpeg|max:2048' // file (jpg/jpeg max 2MB)
+        'nama_barang' => 'required|string|max:255',
+        'kode_barang' => 'required|string|max:255|unique:items,kode_barang',
+        'merek_barang' => 'required|string|max:255',
+        'tahun_pengadaan' => 'required|numeric|digits:4',
+        'gambar_barang' => 'required|file|mimes:jpg,jpeg|max:2048',
+        'deskripsi_barang' => 'required|string',
+        'jumlah_barang' => 'required|integer|min:0',
+        'lokasi_barang' => 'required|string|max:255'
     ];
 
     public function index(): JsonResponse
@@ -46,6 +49,9 @@ class ItemController extends Controller
                 $validatedData['gambar_barang'] = $filename;
             }
 
+            // Set jumlah_tersedia equal to jumlah_barang
+            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
+
             $item = Item::create($validatedData);
 
             return response()->json([
@@ -57,6 +63,10 @@ class ItemController extends Controller
                     'merek_barang' => $item->merek_barang,
                     'tahun_pengadaan' => $item->tahun_pengadaan,
                     'gambar_barang' => $item->gambar_barang,
+                    'deskripsi_barang' => $item->deskripsi_barang,
+                    'jumlah_barang' => $item->jumlah_barang,
+                    'jumlah_tersedia' => $item->jumlah_tersedia,
+                    'lokasi_barang' => $item->lokasi_barang,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ]

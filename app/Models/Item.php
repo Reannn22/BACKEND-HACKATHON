@@ -11,6 +11,10 @@ class Item extends Model
         'kode_barang',
         'merek_barang',
         'tahun_pengadaan',
-        'gambar_barang'
+        'gambar_barang',
+        'deskripsi_barang',
+        'jumlah_barang',
+        'jumlah_tersedia',
+        'lokasi_barang'
     ];
 }
