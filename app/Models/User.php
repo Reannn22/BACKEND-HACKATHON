@@ -41,7 +41,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'phone_change_token',
         'phone_change_token_expiry',
         'password_change_token',
-        'password_change_token_expiry'
+        'password_change_token_expiry',
+        'reset_token',
+        'reset_token_expiry'
     ];
 
     /**

@@ -9,6 +9,12 @@ use Illuminate\Validation\ValidationException;
 
 class ReviewController extends Controller
 {
+    protected $rules = [
+        'id_item' => 'required|exists:items,id',
+        'rating' => 'required|integer|min:1|max:5',
+        'komentar' => 'required|string|max:255'
+    ];
+
     public function index(): JsonResponse
     {
         try {
@@ -28,24 +34,14 @@ class ReviewController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $request->validate([
-                'nama_review' => 'required|string|max:255|unique:reviews,nama_review'
-            ]);
+            $validatedData = $request->validate($this->rules);
 
-            $review = Review::create([
-                'nama_review' => $request->nama_review
-            ]);
+            $review = Review::create($validatedData);
 
             return response()->json([
                 'message' => 'Review created successfully',
-                'data' => [
-                    'id' => $review->id,
-                    'nama_review' => $review->nama_review,
-                    'created_at' => $review->created_at,
-                    'updated_at' => $review->updated_at
-                ]
+                'data' => $review
             ], 201);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Validation failed',
@@ -79,9 +75,7 @@ class ReviewController extends Controller
     {
         try {
             $review = Review::findOrFail($id);
-            $request->validate([
-                'nama_review' => 'required|string|unique:reviews,nama_review,'.$id
-            ]);
+            $request->validate($this->rules);
 
             $review->update($request->all());
             return response()->json([
