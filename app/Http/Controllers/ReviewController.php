@@ -24,7 +24,7 @@ class ReviewController extends Controller
             'id' => $review->id,
             'id_item' => $review->id_item,
             'nama_pengguna' => $review->nama_pengguna,
-            'foto_ulasan' => $review->fotos ? $review->fotos->map(function($foto) {
+            'foto_ulasan' => $review->foto_ulasan ? $review->foto_ulasan->map(function($foto) {
                 return [
                     'id' => $foto->id,
                     'foto_path' => asset('storage/foto_ulasan/' . $foto->foto_path)
@@ -83,7 +83,7 @@ class ReviewController extends Controller
                 }
 
                 // Force refresh the model with its relationships
-                $review->load('fotos');
+                $review->load('foto_ulasan');
             }
 
             return response()->json([
