@@ -17,7 +17,8 @@ class ItemController extends Controller
         'gambar_barang' => 'required|file|mimes:jpg,jpeg|max:2048',
         'deskripsi_barang' => 'required|string',
         'jumlah_barang' => 'required|integer|min:0',
-        'lokasi_barang' => 'required|string|max:255'
+        'lokasi_barang' => 'required|string|max:255',
+        'id_kategori' => 'required|exists:categories,id'
     ];
 
     public function index(): JsonResponse
@@ -67,6 +68,7 @@ class ItemController extends Controller
                     'jumlah_barang' => $item->jumlah_barang,
                     'jumlah_tersedia' => $item->jumlah_tersedia,
                     'lokasi_barang' => $item->lokasi_barang,
+                    'id_kategori' => $item->id_kategori,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ]

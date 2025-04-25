@@ -15,6 +15,12 @@ class Item extends Model
         'deskripsi_barang',
         'jumlah_barang',
         'jumlah_tersedia',
-        'lokasi_barang'
+        'lokasi_barang',
+        'id_kategori'
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'id_kategori');
+    }
 }
