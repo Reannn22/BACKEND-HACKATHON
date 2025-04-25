@@ -21,6 +21,14 @@ Route::post('/admin/login', [AdminAuthController::class, 'login']); // user dapa
 Route::post('/admin/request_token_forget_password', [AdminAuthController::class, 'requestTokenForgetPassword']);
 Route::post('/admin/forgot_password', [AdminAuthController::class, 'forgotPassword']);
 
+// Move these routes outside the auth middleware group
+Route::get('/items_reviews', [ItemReviewController::class, 'index']);
+Route::post('/items_reviews', [ItemReviewController::class, 'store']);
+Route::get('/items_reviews/{id}', [ItemReviewController::class, 'show']);
+Route::put('/items_reviews/{id}', [ItemReviewController::class, 'update']);
+Route::delete('/items_reviews/{id}', [ItemReviewController::class, 'destroy']);
+Route::delete('/items_reviews', [ItemReviewController::class, 'deleteAll']);
+
 Route::middleware('auth:api')->group(function () {
     Route::post('/admin/register', [AdminAuthController::class, 'register']);
     Route::get('/admin/{id}', [AdminAuthController::class, 'show']); // developer dapat melihat data admin
@@ -106,14 +114,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/activities_log/{id}', [ActivityLogController::class, 'show']);
     Route::put('/activities_log/{id}', [ActivityLogController::class, 'update']);
     Route::delete('/activities_log/{id}', [ActivityLogController::class, 'destroy']);
-
-    // Reviews routes (renamed to Items Reviews)
-    Route::get('/items_reviews', [ItemReviewController::class, 'index']);
-    Route::post('/items_reviews', [ItemReviewController::class, 'store']);
-    Route::get('/items_reviews/{id}', [ItemReviewController::class, 'show']);
-    Route::put('/items_reviews/{id}', [ItemReviewController::class, 'update']);
-    Route::delete('/items_reviews/{id}', [ItemReviewController::class, 'destroy']);
-    Route::delete('/items_reviews', [ItemReviewController::class, 'deleteAll']);
 
     // Room Reviews routes
     Route::get('/rooms_reviews', [RoomReviewController::class, 'index']);
