@@ -42,13 +42,18 @@ class ItemController extends Controller
             'kode_barang' => $item->kode_barang,
             'merek_barang' => $item->merek_barang,
             'tahun_pengadaan' => $item->tahun_pengadaan,
-            'gambar_barang' => $item->gambar_barang,
+            'foto_barang' => $item->foto_barang ? $item->foto_barang->map(function($foto) {
+                return [
+                    'id' => $foto->id,
+                    'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
+                ];
+            }) : [],
             'deskripsi_barang' => $item->deskripsi_barang,
             'jumlah_barang' => $item->jumlah_barang,
             'jumlah_tersedia' => $item->jumlah_tersedia,
             'lokasi_barang' => $item->lokasi_barang,
             'nama_kategori' => $item->category ? $item->category->nama_kategori : null,
-            'is_dibawa' => $item->is_dibawa ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang',
+            'is_dibawa' => $item->is_dibawa,
             'berat_barang' => $this->formatWeight($item->berat_barang),
             'created_at' => $item->created_at,
             'updated_at' => $item->updated_at
@@ -96,12 +101,13 @@ class ItemController extends Controller
 
             $item = Item::create($validatedData);
 
+            // Handle multiple photos
             if ($request->hasFile('foto_barang')) {
                 foreach ($request->file('foto_barang') as $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                         $photo->storeAs('public/foto_barang', $filename);
-
+                        
                         $item->foto_barang()->create([
                             'foto_path' => $filename
                         ]);
@@ -109,8 +115,9 @@ class ItemController extends Controller
                 }
             }
 
-            $item->load(['category', 'foto_barang']);
-            
+            // Reload the item with its relationships
+            $item = Item::with(['category', 'foto_barang'])->find($item->id);
+
             return response()->json([
                 'message' => 'Item created successfully',
                 'data' => $this->formatItemResponse($item)
