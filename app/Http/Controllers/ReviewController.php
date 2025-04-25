@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemReview;
+use App\Models\FotoUlasan;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -63,30 +64,20 @@ class ReviewController extends Controller
             ]);
 
             if ($request->hasFile('foto_ulasan')) {
-                // Debug log
-                \Log::info('Files received:', ['files' => $request->file('foto_ulasan')]);
-                
                 $files = $request->file('foto_ulasan');
-                if (!is_array($files)) {
-                    $files = [$files];
-                }
-
                 foreach ($files as $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . $photo->getClientOriginalName();
                         $photo->storeAs('public/foto_ulasan', $filename);
                         
-                        // Create foto record
-                        $foto = new FotoUlasan([
+                        $review->fotos()->create([
                             'foto_path' => $filename
                         ]);
-                        $review->fotos()->save($foto);
                     }
                 }
             }
 
             $review->load('fotos');
-            
             return response()->json([
                 'message' => 'Review created successfully',
                 'data' => $this->formatResponse($review)
