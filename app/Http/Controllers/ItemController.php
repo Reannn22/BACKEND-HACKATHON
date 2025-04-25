@@ -10,9 +10,11 @@ use Illuminate\Validation\ValidationException;
 class ItemController extends Controller
 {
     protected $rules = [
-        'nama_barang' => 'required|string|max:255|unique:items,nama_barang',
-        'kode_barang' => 'required|string|max:255',
-        'merk_barang' => 'required|string|max:255',
+        'nama_barang' => 'required|string|max:255', // text
+        'kode_barang' => 'required|string|max:255|unique:items,kode_barang', // text
+        'merek_barang' => 'required|string|max:255', // text
+        'tahun_pengadaan' => 'required|numeric|digits:4', // text (year)
+        'gambar_barang' => 'required|file|mimes:jpg,jpeg|max:2048' // file (jpg/jpeg max 2MB)
     ];
 
     public function index(): JsonResponse
@@ -36,11 +38,15 @@ class ItemController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            $item = Item::create([
-                'nama_barang' => $validatedData['nama_barang'],
-                'kode_barang' => $validatedData['kode_barang'],
-                'merk_barang' => $validatedData['merk_barang']
-            ]);
+            // Handle file upload
+            if ($request->hasFile('gambar_barang')) {
+                $file = $request->file('gambar_barang');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->storeAs('public/gambar_barang', $filename);
+                $validatedData['gambar_barang'] = $filename;
+            }
+
+            $item = Item::create($validatedData);
 
             return response()->json([
                 'message' => 'Item created successfully',
@@ -48,17 +54,13 @@ class ItemController extends Controller
                     'id' => $item->id,
                     'nama_barang' => $item->nama_barang,
                     'kode_barang' => $item->kode_barang,
-                    'merk_barang' => $item->merk_barang,
+                    'merek_barang' => $item->merek_barang,
+                    'tahun_pengadaan' => $item->tahun_pengadaan,
+                    'gambar_barang' => $item->gambar_barang,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ]
             ], 201);
-
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create item',
