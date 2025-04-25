@@ -9,6 +9,12 @@ use Illuminate\Validation\ValidationException;
 
 class ItemController extends Controller
 {
+    protected $rules = [
+        'nama_barang' => 'required|string|max:255|unique:items,nama_barang',
+        'kode_barang' => 'required|string|max:255',
+        'merk_barang' => 'required|string|max:255',
+    ];
+
     public function index(): JsonResponse
     {
         try {
@@ -28,19 +34,21 @@ class ItemController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $request->validate([
-                'nama_item' => 'required|string|max:255|unique:items,nama_item'
-            ]);
+            $validatedData = $request->validate($this->rules);
 
             $item = Item::create([
-                'nama_item' => $request->nama_item
+                'nama_barang' => $validatedData['nama_barang'],
+                'kode_barang' => $validatedData['kode_barang'],
+                'merk_barang' => $validatedData['merk_barang']
             ]);
 
             return response()->json([
                 'message' => 'Item created successfully',
                 'data' => [
                     'id' => $item->id,
-                    'nama_item' => $item->nama_item,
+                    'nama_barang' => $item->nama_barang,
+                    'kode_barang' => $item->kode_barang,
+                    'merk_barang' => $item->merk_barang,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ]
@@ -79,11 +87,14 @@ class ItemController extends Controller
     {
         try {
             $item = Item::findOrFail($id);
-            $request->validate([
-                'nama_item' => 'required|string|unique:items,nama_item,'.$id
+            $validatedData = $request->validate($this->rules);
+
+            $item->update([
+                'nama_barang' => $validatedData['nama_barang'],
+                'kode_barang' => $validatedData['kode_barang'],
+                'merk_barang' => $validatedData['merk_barang']
             ]);
 
-            $item->update($request->all());
             return response()->json([
                 'message' => 'Item updated successfully',
                 'data' => $item
