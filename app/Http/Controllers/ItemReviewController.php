@@ -56,11 +56,6 @@ class ItemReviewController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            \Log::info('File upload debug:', [
-                'hasFile' => $request->hasFile('foto_ulasan'),
-                'files' => $request->file('foto_ulasan')
-            ]);
-
             $review = ItemReview::create([
                 'id_item' => $request->id_item,
                 'nama_pengguna' => $request->nama_pengguna,
@@ -74,23 +69,20 @@ class ItemReviewController extends Controller
                     $files = [$files];
                 }
 
-                foreach ($files as $photo) {
-                    \Log::info('Processing file:', [
-                        'valid' => $photo->isValid(),
-                        'original_name' => $photo->getClientOriginalName()
-                    ]);
-
+                // Reset auto-increment for this review's photos
+                \DB::statement('SET @foto_id = 0');
+                
+                foreach ($files as $index => $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                         $path = $photo->storeAs('public/foto_ulasan', $filename);
 
-                        \Log::info('File stored:', ['path' => $path]);
-
-                        $foto = $review->fotos()->create([
+                        // Create foto with manual ID increment
+                        $foto = new FotoUlasan([
                             'foto_path' => $filename
                         ]);
-
-                        \Log::info('Foto record created:', ['foto_id' => $foto->id]);
+                        $foto->id = $index + 1; // Manual ID assignment
+                        $review->fotos()->save($foto);
                     }
                 }
             }
