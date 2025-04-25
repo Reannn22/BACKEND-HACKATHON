@@ -46,7 +46,7 @@ class ItemController extends Controller
             'jumlah_barang' => $item->jumlah_barang,
             'jumlah_tersedia' => $item->jumlah_tersedia,
             'lokasi_barang' => $item->lokasi_barang,
-            'nama_kategori' => $item->category->nama_kategori,
+            'nama_kategori' => $item->category ? $item->category->nama_kategori : null,
             'is_dibawa' => $item->is_dibawa ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang',
             'berat_barang' => $this->formatWeight($item->berat_barang),
             'created_at' => $item->created_at,
@@ -58,9 +58,13 @@ class ItemController extends Controller
     {
         try {
             $items = Item::with('category')->get();
+            $formattedItems = $items->map(function($item) {
+                return $this->formatItemResponse($item);
+            })->filter();
+            
             return response()->json([
                 'message' => 'Items retrieved successfully',
-                'data' => $items->map(fn($item) => $this->formatItemResponse($item))
+                'data' => array_values($formattedItems->toArray())
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
