@@ -55,6 +55,12 @@ class ItemController extends Controller
         ];
     }
 
+    private function formatResponse($item)
+    {
+        $item->load('foto_barang');
+        return $item;
+    }
+
     public function index(): JsonResponse
     {
         try {
@@ -91,8 +97,10 @@ class ItemController extends Controller
 
             $item = Item::create($validatedData);
 
+            // Handle file uploads
             if ($request->hasFile('foto_barang')) {
-                foreach ($request->file('foto_barang') as $photo) {
+                $files = $request->file('foto_barang');
+                foreach ($files as $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                         $photo->storeAs('public/foto_barang', $filename);
@@ -104,10 +112,9 @@ class ItemController extends Controller
                 }
             }
 
-            $item->load('foto_barang');
             return response()->json([
                 'message' => 'Item created successfully',
-                'data' => $item
+                'data' => $this->formatResponse($item)
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
