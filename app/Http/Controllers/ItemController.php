@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -55,6 +56,9 @@ class ItemController extends Controller
 
             $item = Item::create($validatedData);
 
+            // Load category with category name
+            $category = Category::find($validatedData['id_kategori']);
+
             return response()->json([
                 'message' => 'Item created successfully',
                 'data' => [
@@ -68,7 +72,7 @@ class ItemController extends Controller
                     'jumlah_barang' => $item->jumlah_barang,
                     'jumlah_tersedia' => $item->jumlah_tersedia,
                     'lokasi_barang' => $item->lokasi_barang,
-                    'id_kategori' => $item->id_kategori,
+                    'nama_kategori' => $category->nama_kategori,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ]
