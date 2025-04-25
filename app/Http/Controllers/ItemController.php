@@ -21,7 +21,7 @@ class ItemController extends Controller
         'jumlah_tersedia' => 'nullable|integer|min:0',
         'lokasi_barang' => 'nullable|string',
         'nama_kategori' => 'nullable|string',
-        'is_dibawa' => 'required|in:Bisa dibawa pulang,Tidak bisa dibawa pulang',
+        'is_dibawa' => 'required|boolean', // Changed to boolean
         'berat_barang' => 'required|string',
         'foto_barang.*' => 'required|file|mimes:jpg,jpeg,png|max:2048'
     ];
@@ -80,6 +80,9 @@ class ItemController extends Controller
         try {
             // Validate basic data
             $validatedData = $request->validate($this->rules);
+
+            // Convert boolean to string
+            $validatedData['is_dibawa'] = $validatedData['is_dibawa'] ? 'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
 
             // Set jumlah_tersedia to jumlah_barang if not provided
             $validatedData['jumlah_tersedia'] = $request->input('jumlah_tersedia', $validatedData['jumlah_barang']);
