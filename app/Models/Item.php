@@ -21,7 +21,8 @@ class Item extends Model
         'id_kategori',
         'is_dibawa',
         'berat_barang',
-        'warna_barang'
+        'warna_barang',
+        'id_lokasi' // Add this
     ];
 
     protected $appends = ['formatted_weight'];
@@ -63,6 +64,11 @@ class Item extends Model
     public function foto_barang()
     {
         return $this->hasMany(FotoBarang::class);
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'id_lokasi');
     }
 
     protected static function boot()
