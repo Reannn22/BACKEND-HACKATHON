@@ -16,13 +16,12 @@ class Item extends Model
         'tahun_pengadaan',
         'deskripsi_barang',
         'jumlah_barang',
-        'jumlah_tersedia',
-        'lokasi_barang',
         'id_kategori',
+        'id_lokasi', // Add this
         'is_dibawa',
         'berat_barang',
         'warna_barang',
-        'id_lokasi' // Add this
+        'jumlah_tersedia'
     ];
 
     protected $appends = ['formatted_weight'];
@@ -37,22 +36,37 @@ class Item extends Model
     {
         $array = parent::toArray();
         return [
+            'id' => $array['id'],
             'nama_barang' => $array['nama_barang'],
             'kode_barang' => $array['kode_barang'],
             'merek_barang' => $array['merek_barang'],
             'tahun_pengadaan' => $array['tahun_pengadaan'],
-            'foto_barang' => $array['foto_barang'],
+            'foto_barang' => $this->foto_barang ? $this->foto_barang->map(function($foto) {
+                return [
+                    'id' => $foto->id,
+                    'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
+                ];
+            }) : [],
             'deskripsi_barang' => $array['deskripsi_barang'],
             'jumlah_barang' => $array['jumlah_barang'],
             'jumlah_tersedia' => $array['jumlah_tersedia'],
-            'lokasi_barang' => $array['lokasi_barang'],
+            'kategori' => $this->category ? [
+                'id' => $this->category->id,
+                'nama_kategori' => $this->category->nama_kategori
+            ] : null,
+            'lokasi' => $this->location ? [
+                'id' => $this->location->id,
+                'nama_lokasi' => $this->location->nama_lokasi,
+                'gedung' => $this->location->gedung,
+                'ruangan' => $this->location->ruangan
+            ] : null,
             'id_kategori' => $array['id_kategori'],
+            'id_lokasi' => $array['id_lokasi'],
             'is_dibawa' => $array['is_dibawa'],
             'berat_barang' => $array['formatted_weight'],
             'warna_barang' => $array['warna_barang'],
             'created_at' => $array['created_at'],
-            'updated_at' => $array['updated_at'],
-            'id' => $array['id']
+            'updated_at' => $array['updated_at']
         ];
     }
 

@@ -96,10 +96,31 @@ class ItemController extends Controller
                 \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
             }
 
-            // Set jumlah_tersedia equal to jumlah_barang
             $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
 
             $item = Item::create($validatedData);
+
+            // Handle photo uploads if present
+            if ($request->hasFile('foto_barang')) {
+                $files = $request->file('foto_barang');
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+
+                foreach ($files as $photo) {
+                    if ($photo->isValid()) {
+                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
+                        $path = $photo->storeAs('public/foto_barang', $filename);
+
+                        $item->foto_barang()->create([
+                            'foto_path' => $filename
+                        ]);
+                    }
+                }
+            }
+
+            // Load relationships
+            $item->load(['category', 'location', 'foto_barang']);
 
             return response()->json([
                 'message' => 'Item created successfully',
