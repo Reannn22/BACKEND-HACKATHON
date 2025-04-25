@@ -86,23 +86,13 @@ class ItemController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            // Set defaults and convert values
-            $validatedData['is_dibawa'] = filter_var($request->is_dibawa, FILTER_VALIDATE_BOOLEAN) ?
-                'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
-            $validatedData['berat_barang'] = (string) $request->berat_barang;
-            $validatedData['jumlah_tersedia'] = $request->input('jumlah_tersedia', $validatedData['jumlah_barang']);
-            $validatedData['deskripsi_barang'] = $request->input('deskripsi_barang', '');
-            $validatedData['lokasi_barang'] = $request->input('lokasi_barang', '');
+            // Convert weight to grams for storage
+            $validatedData['berat_barang'] = (int) $request->berat_barang;
 
             $item = Item::create($validatedData);
 
             if ($request->hasFile('foto_barang')) {
-                $files = $request->file('foto_barang');
-                if (!is_array($files)) {
-                    $files = [$files];
-                }
-
-                foreach ($files as $photo) {
+                foreach ($request->file('foto_barang') as $photo) {
                     if ($photo->isValid()) {
                         $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
                         $photo->storeAs('public/foto_barang', $filename);
@@ -112,10 +102,9 @@ class ItemController extends Controller
                         ]);
                     }
                 }
-
-                $item->refresh();
             }
 
+            $item->refresh();
             return response()->json([
                 'message' => 'Item created successfully',
                 'data' => $item
