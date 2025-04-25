@@ -15,13 +15,13 @@ class ItemReview extends Model
         'komentar'
     ];
 
-    public function item()
-    {
-        return $this->belongsTo(Item::class, 'id_item');
-    }
-
     public function fotos()
     {
         return $this->hasMany(FotoUlasan::class, 'review_id');
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(Item::class, 'id_item');
     }
 }

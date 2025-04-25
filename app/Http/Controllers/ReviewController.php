@@ -62,8 +62,10 @@ class ReviewController extends Controller
                 'komentar' => $request->komentar
             ]);
 
-            // Debug file upload
             if ($request->hasFile('foto_ulasan')) {
+                // Debug log
+                \Log::info('Files received:', ['files' => $request->file('foto_ulasan')]);
+                
                 $files = $request->file('foto_ulasan');
                 if (!is_array($files)) {
                     $files = [$files];
@@ -74,9 +76,11 @@ class ReviewController extends Controller
                         $filename = time() . '_' . $photo->getClientOriginalName();
                         $photo->storeAs('public/foto_ulasan', $filename);
                         
-                        $review->fotos()->create([
+                        // Create foto record
+                        $foto = new FotoUlasan([
                             'foto_path' => $filename
                         ]);
+                        $review->fotos()->save($foto);
                     }
                 }
             }
