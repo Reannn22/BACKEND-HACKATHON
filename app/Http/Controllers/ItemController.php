@@ -22,7 +22,8 @@ class ItemController extends Controller
         'id_lokasi' => 'required|exists:locations,id',
         'is_dibawa' => 'required|string',
         'berat_barang' => 'required|numeric',
-        'warna_barang' => 'required|string'
+        'warna_barang' => 'required|string',
+        'id_admin' => 'required|exists:users,id'
         // Removed jumlah_tersedia from validation rules since it will be set automatically
     ];
 
@@ -56,6 +57,15 @@ class ItemController extends Controller
             'is_dibawa' => $item->is_dibawa,
             'berat_barang' => $this->formatWeight($item->berat_barang),
             'warna_barang' => $item->warna_barang,
+            'admin' => $item->admin ? [
+                'id' => $item->admin->id,
+                'name' => $item->admin->name,
+                'email' => $item->admin->email,
+                'role' => $item->admin->role,
+                'no_hp' => $item->admin->no_hp,
+                'created_at' => $item->admin->created_at,
+                'updated_at' => $item->admin->updated_at
+            ] : null,
             'created_at' => $item->created_at,
             'updated_at' => $item->updated_at
         ];
@@ -70,7 +80,7 @@ class ItemController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $items = Item::with('category')->get();
+            $items = Item::with(['category', 'admin'])->get();
             $formattedItems = $items->map(function($item) {
                 return $this->formatItemResponse($item);
             })->filter();
@@ -120,11 +130,11 @@ class ItemController extends Controller
             }
 
             // Load relationships
-            $item->load(['category', 'location', 'foto_barang']);
+            $item->load(['category', 'location', 'foto_barang', 'admin']);
 
             return response()->json([
                 'message' => 'Item created successfully',
-                'data' => $item
+                'data' => $this->formatItemResponse($item)
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -137,7 +147,7 @@ class ItemController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $item = Item::with('category')->findOrFail($id);
+            $item = Item::with(['category', 'admin'])->findOrFail($id);
             return response()->json([
                 'message' => 'Item retrieved successfully',
                 'data' => $this->formatItemResponse($item)
@@ -170,7 +180,7 @@ class ItemController extends Controller
 
             $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
             $item->update($validatedData);
-            $item->load('category');
+            $item->load(['category', 'admin']);
 
             return response()->json([
                 'message' => 'Item updated successfully',

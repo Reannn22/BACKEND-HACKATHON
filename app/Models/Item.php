@@ -16,12 +16,13 @@ class Item extends Model
         'tahun_pengadaan',
         'deskripsi_barang',
         'jumlah_barang',
+        'jumlah_tersedia',
         'id_kategori',
-        'id_lokasi', // Add this
+        'id_lokasi',
+        'id_admin', // Add this
         'is_dibawa',
         'berat_barang',
         'warna_barang',
-        'jumlah_tersedia'
     ];
 
     protected $appends = ['formatted_weight'];
@@ -83,6 +84,11 @@ class Item extends Model
     public function location()
     {
         return $this->belongsTo(Location::class, 'id_lokasi');
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'id_admin');
     }
 
     protected static function boot()
