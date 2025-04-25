@@ -11,12 +11,11 @@ class Item extends Model
         'kode_barang',
         'merek_barang',
         'tahun_pengadaan',
-        'gambar_barang',
         'deskripsi_barang',
         'jumlah_barang',
         'jumlah_tersedia',
         'lokasi_barang',
-        'id_kategori',
+        'nama_kategori',
         'is_dibawa',
         'berat_barang'
     ];
@@ -24,5 +23,10 @@ class Item extends Model
     public function category()
     {
         return $this->belongsTo(Category::class, 'id_kategori');
+    }
+
+    public function fotos()
+    {
+        return $this->hasMany(FotoBarang::class);
     }
 }

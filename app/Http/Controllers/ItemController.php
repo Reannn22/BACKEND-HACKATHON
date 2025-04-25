@@ -12,17 +12,18 @@ use Illuminate\Support\Facades\Storage;
 class ItemController extends Controller
 {
     protected $rules = [
-        'nama_barang' => 'required|string|max:255',
-        'kode_barang' => 'required|string|max:255|unique:items,kode_barang',
-        'merek_barang' => 'required|string|max:255',
-        'tahun_pengadaan' => 'required|numeric|digits:4',
-        'gambar_barang' => 'required|file|mimes:jpg,jpeg|max:2048',
-        'deskripsi_barang' => 'required|string',
+        'nama_barang' => 'required|string',
+        'kode_barang' => 'required|string|unique:items',
+        'merek_barang' => 'required|string',
+        'tahun_pengadaan' => 'required|string',
+        'deskripsi_barang' => 'nullable|string',
         'jumlah_barang' => 'required|integer|min:0',
-        'lokasi_barang' => 'required|string|max:255',
-        'id_kategori' => 'required|exists:categories,id',
-        'is_dibawa' => 'required|in:true,false,0,1',
-        'berat_barang' => 'required|numeric|min:0'
+        'jumlah_tersedia' => 'nullable|integer|min:0',
+        'lokasi_barang' => 'nullable|string',
+        'nama_kategori' => 'nullable|string',
+        'is_dibawa' => 'required|in:Bisa dibawa pulang,Tidak bisa dibawa pulang',
+        'berat_barang' => 'required|string',
+        'foto_barang.*' => 'required|file|mimes:jpg,jpeg,png|max:2048'
     ];
 
     private function formatWeight($weight)
@@ -61,7 +62,7 @@ class ItemController extends Controller
             $formattedItems = $items->map(function($item) {
                 return $this->formatItemResponse($item);
             })->filter();
-            
+
             return response()->json([
                 'message' => 'Items retrieved successfully',
                 'data' => array_values($formattedItems->toArray())
@@ -77,31 +78,39 @@ class ItemController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            // Validate basic data
             $validatedData = $request->validate($this->rules);
 
-            // Convert is_dibawa to boolean
-            $validatedData['is_dibawa'] = filter_var($validatedData['is_dibawa'], FILTER_VALIDATE_BOOLEAN);
+            // Set jumlah_tersedia to jumlah_barang if not provided
+            $validatedData['jumlah_tersedia'] = $request->input('jumlah_tersedia', $validatedData['jumlah_barang']);
 
-            // Handle file upload
-            if ($request->hasFile('gambar_barang')) {
-                $file = $request->file('gambar_barang');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->storeAs('public/gambar_barang', $filename);
-                $validatedData['gambar_barang'] = $filename;
-            }
-
-            // Set jumlah_tersedia equal to jumlah_barang
-            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
-
+            // Create item
             $item = Item::create($validatedData);
 
-            // Load category with category name
-            $item->load('category');
+            // Handle file uploads
+            if ($request->hasFile('foto_barang')) {
+                foreach ($request->file('foto_barang') as $photo) {
+                    if ($photo->isValid()) {
+                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
+                        $photo->storeAs('public/foto_barang', $filename);
 
+                        $item->fotos()->create([
+                            'foto_path' => $filename
+                        ]);
+                    }
+                }
+            }
+
+            $item->load('fotos');
             return response()->json([
                 'message' => 'Item created successfully',
-                'data' => $this->formatItemResponse($item)
+                'data' => $item
             ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create item',
