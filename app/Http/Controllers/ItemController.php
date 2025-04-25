@@ -12,19 +12,18 @@ use Illuminate\Support\Facades\Storage;
 class ItemController extends Controller
 {
     protected $rules = [
-        'nama_barang' => 'required|string',
-        'kode_barang' => 'required|string|unique:items',
+        'nama_barang' => 'required|string|max:255',
+        'kode_barang' => 'required|string|unique:items,kode_barang',
         'merek_barang' => 'required|string',
-        'tahun_pengadaan' => 'required|string',
-        'deskripsi_barang' => 'nullable|string',
+        'tahun_pengadaan' => 'required|integer',
+        'deskripsi_barang' => 'required|string',
         'jumlah_barang' => 'required|integer|min:0',
-        'jumlah_tersedia' => 'nullable|integer|min:0',
-        'lokasi_barang' => 'nullable|string',
-        'id_kategori' => 'required|integer',  // Added this line
-        'is_dibawa' => 'required|in:true,false,1,0',  // Accept string "true"/"false" or 1/0
-        'berat_barang' => 'required|string',
-        'warna_barang' => 'required|string',
-        'foto_barang.*' => 'required|file|mimes:jpg,jpeg,png|max:2048'
+        'id_kategori' => 'required|exists:categories,id',
+        'id_lokasi' => 'required|exists:locations,id',
+        'is_dibawa' => 'required|string',
+        'berat_barang' => 'required|numeric',
+        'warna_barang' => 'required|string'
+        // Removed jumlah_tersedia from validation rules since it will be set automatically
     ];
 
     private function formatWeight($weight)
@@ -52,7 +51,7 @@ class ItemController extends Controller
             'deskripsi_barang' => $item->deskripsi_barang,
             'jumlah_barang' => $item->jumlah_barang,
             'jumlah_tersedia' => $item->jumlah_tersedia,
-            'lokasi_barang' => $item->lokasi_barang,
+            'id_lokasi' => $item->id_lokasi,
             'nama_kategori' => $item->category ? $item->category->nama_kategori : null,
             'is_dibawa' => $item->is_dibawa,
             'berat_barang' => $this->formatWeight($item->berat_barang),
@@ -91,68 +90,21 @@ class ItemController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            // Debug request
-            \Log::info('Request files:', ['files' => $request->allFiles()]);
-
             $validatedData = $request->validate($this->rules);
 
-            // Set defaults and convert values
-            $validatedData['is_dibawa'] = filter_var($request->is_dibawa, FILTER_VALIDATE_BOOLEAN) ?
-                'Bisa dibawa pulang' : 'Tidak bisa dibawa pulang';
-            $validatedData['berat_barang'] = (int) $request->berat_barang;
-            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
-            $validatedData['deskripsi_barang'] = $request->input('deskripsi_barang', '');
-            $validatedData['lokasi_barang'] = $request->input('lokasi_barang', '');
-
-            \DB::beginTransaction();
-            try {
-                $item = Item::create($validatedData);
-
-                if ($request->hasFile('foto_barang')) {
-                    \Log::info('Processing foto_barang files');
-                    $photos = $request->file('foto_barang');
-                    if (!is_array($photos)) {
-                        $photos = [$photos];
-                    }
-
-                    foreach ($photos as $photo) {
-                        if ($photo->isValid()) {
-                            $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
-                            $photo->storeAs('public/foto_barang', $filename);
-
-                            \Log::info('Creating foto record', ['filename' => $filename]);
-                            $item->foto_barang()->create([
-                                'foto_path' => $filename
-                            ]);
-                        } else {
-                            \Log::error('Invalid file uploaded', ['file' => $photo]);
-                        }
-                    }
-                } else {
-                    \Log::info('No foto_barang files found in request');
-                }
-
-                \DB::commit();
-            } catch (\Exception $e) {
-                \DB::rollback();
-                \Log::error('Error in transaction', ['error' => $e->getMessage()]);
-                throw $e;
+            if (Item::count() === 0) {
+                \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
             }
 
-            $item->load(['category', 'foto_barang']);
+            // Set jumlah_tersedia equal to jumlah_barang
+            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
 
-            // Debug final item
-            \Log::info('Final item data:', ['item' => $item->toArray()]);
+            $item = Item::create($validatedData);
 
             return response()->json([
                 'message' => 'Item created successfully',
-                'data' => $this->formatItemResponse($item)
+                'data' => $item
             ], 201);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create item',
