@@ -8,13 +8,37 @@ use Illuminate\Http\JsonResponse;
 
 class LocationController extends Controller
 {
+    protected $rules = [
+        'nama_lokasi' => 'required|string|max:255',
+        'kode_lokasi' => 'required|string|max:50',
+        'gedung' => 'required|string|max:255',
+        'lantai' => 'required|string|max:50',
+        'ruangan' => 'required|string|max:50',
+        'deskripsi' => 'required|string'
+    ];
+
+    private function formatResponse($location)
+    {
+        return [
+            'id' => $location->id,
+            'nama_lokasi' => $location->nama_lokasi,
+            'kode_lokasi' => $location->kode_lokasi,
+            'gedung' => $location->gedung,
+            'lantai' => $location->lantai,
+            'ruangan' => $location->ruangan,
+            'deskripsi' => $location->deskripsi,
+            'created_at' => $location->created_at,
+            'updated_at' => $location->updated_at
+        ];
+    }
+
     public function index(): JsonResponse
     {
         try {
             $locations = Location::all();
             return response()->json([
                 'message' => 'Locations retrieved successfully',
-                'data' => $locations
+                'data' => $locations->map(fn($location) => $this->formatResponse($location))
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -27,16 +51,17 @@ class LocationController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'required|string',
-                'address' => 'required|string'
-            ]);
+            $validatedData = $request->validate($this->rules);
+
+            if (Location::count() === 0) {
+                \DB::statement('ALTER TABLE locations AUTO_INCREMENT = 1');
+            }
 
             $location = Location::create($validatedData);
+
             return response()->json([
                 'message' => 'Location created successfully',
-                'data' => $location
+                'data' => $this->formatResponse($location)
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -52,7 +77,7 @@ class LocationController extends Controller
             $location = Location::findOrFail($id);
             return response()->json([
                 'message' => 'Location retrieved successfully',
-                'data' => $location
+                'data' => $this->formatResponse($location)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -66,16 +91,12 @@ class LocationController extends Controller
     {
         try {
             $location = Location::findOrFail($id);
-            $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'required|string',
-                'address' => 'required|string'
-            ]);
+            $validatedData = $request->validate($this->rules);
 
             $location->update($validatedData);
             return response()->json([
                 'message' => 'Location updated successfully',
-                'data' => $location
+                'data' => $this->formatResponse($location)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

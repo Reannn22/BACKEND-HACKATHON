@@ -10,8 +10,11 @@ class Location extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'description',
-        'address'
+        'nama_lokasi',
+        'kode_lokasi',
+        'gedung',
+        'lantai',
+        'ruangan',
+        'deskripsi'
     ];
 }

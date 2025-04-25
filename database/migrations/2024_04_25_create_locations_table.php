@@ -10,9 +10,12 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description');
-            $table->string('address');
+            $table->string('nama_lokasi');
+            $table->string('kode_lokasi');
+            $table->string('gedung');
+            $table->string('lantai');
+            $table->string('ruangan');
+            $table->text('deskripsi');
             $table->timestamps();
         });
     }
