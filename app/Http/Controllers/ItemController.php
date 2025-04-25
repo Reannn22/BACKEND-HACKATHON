@@ -232,19 +232,25 @@ class ItemController extends Controller
         try {
             \DB::beginTransaction();
             try {
-                // Delete all foto_barang records first
-                \DB::table('foto_barang')->delete();
-                
-                // Now safe to delete all items
+                // Disable foreign key checks
+                \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+                // Delete all records from both tables
+                \DB::table('foto_barang')->truncate();
                 Item::truncate();
-                
+
+                // Re-enable foreign key checks
+                \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
                 \DB::commit();
-                
+
                 return response()->json([
                     'message' => 'All items deleted successfully'
                 ], 200);
             } catch (\Exception $e) {
                 \DB::rollback();
+                // Make sure foreign key checks are re-enabled even if there's an error
+                \DB::statement('SET FOREIGN_KEY_CHECKS=1');
                 throw $e;
             }
         } catch (\Exception $e) {
