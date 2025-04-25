@@ -43,20 +43,19 @@ class ItemController extends Controller
             'kode_barang' => $item->kode_barang,
             'merek_barang' => $item->merek_barang,
             'tahun_pengadaan' => $item->tahun_pengadaan,
-            'foto_barang' => $item->foto_barang ? $item->foto_barang->map(function($foto) {
-                return [
-                    'id' => $foto->id,
-                    'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
-                ];
-            }) : [],
             'deskripsi_barang' => $item->deskripsi_barang,
             'jumlah_barang' => $item->jumlah_barang,
             'jumlah_tersedia' => $item->jumlah_tersedia,
-            'id_lokasi' => $item->id_lokasi,
-            'nama_kategori' => $item->category ? $item->category->nama_kategori : null,
-            'is_dibawa' => $item->is_dibawa,
-            'berat_barang' => $this->formatWeight($item->berat_barang),
-            'warna_barang' => $item->warna_barang,
+            'kategori' => $item->category ? [
+                'id' => $item->category->id,
+                'nama_kategori' => $item->category->nama_kategori
+            ] : null,
+            'lokasi' => $item->location ? [
+                'id' => $item->location->id,
+                'nama_lokasi' => $item->location->nama_lokasi,
+                'gedung' => $item->location->gedung,
+                'ruangan' => $item->location->ruangan
+            ] : null,
             'admin' => $item->admin ? [
                 'id' => $item->admin->id,
                 'name' => $item->admin->name,
@@ -66,21 +65,24 @@ class ItemController extends Controller
                 'created_at' => $item->admin->created_at,
                 'updated_at' => $item->admin->updated_at
             ] : null,
+            'is_dibawa' => $item->is_dibawa,
+            'berat_barang' => $this->formatWeight($item->berat_barang),
+            'warna_barang' => $item->warna_barang,
+            'foto_barang' => $item->foto_barang->map(function($foto) {
+                return [
+                    'id' => $foto->id,
+                    'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
+                ];
+            }),
             'created_at' => $item->created_at,
             'updated_at' => $item->updated_at
         ];
     }
 
-    private function formatResponse($item)
-    {
-        $item->load('foto_barang');
-        return $item;
-    }
-
     public function index(): JsonResponse
     {
         try {
-            $items = Item::with(['category', 'admin'])->get();
+            $items = Item::with(['category', 'location', 'admin', 'foto_barang'])->get();
             $formattedItems = $items->map(function($item) {
                 return $this->formatItemResponse($item);
             })->filter();
@@ -147,7 +149,7 @@ class ItemController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $item = Item::with(['category', 'admin'])->findOrFail($id);
+            $item = Item::with(['category', 'location', 'admin', 'foto_barang'])->findOrFail($id);
             return response()->json([
                 'message' => 'Item retrieved successfully',
                 'data' => $this->formatItemResponse($item)
@@ -180,7 +182,7 @@ class ItemController extends Controller
 
             $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
             $item->update($validatedData);
-            $item->load(['category', 'admin']);
+            $item->load(['category', 'location', 'admin', 'foto_barang']);
 
             return response()->json([
                 'message' => 'Item updated successfully',
