@@ -13,6 +13,8 @@ class FotoBarang extends Model
         'foto_path'
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function item()
     {
         return $this->belongsTo(Item::class);

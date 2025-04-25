@@ -99,24 +99,30 @@ class ItemController extends Controller
             $validatedData['deskripsi_barang'] = $request->input('deskripsi_barang', '');
             $validatedData['lokasi_barang'] = $request->input('lokasi_barang', '');
 
-            $item = Item::create($validatedData);
+            \DB::beginTransaction();
+            try {
+                $item = Item::create($validatedData);
 
-            // Handle multiple photos
-            if ($request->hasFile('foto_barang')) {
-                foreach ($request->file('foto_barang') as $photo) {
-                    if ($photo->isValid()) {
-                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
-                        $photo->storeAs('public/foto_barang', $filename);
-                        
-                        $item->foto_barang()->create([
-                            'foto_path' => $filename
-                        ]);
+                if ($request->hasFile('foto_barang')) {
+                    foreach ($request->file('foto_barang') as $photo) {
+                        if ($photo->isValid()) {
+                            $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
+                            $photo->storeAs('public/foto_barang', $filename);
+                            
+                            $item->foto_barang()->create([
+                                'foto_path' => $filename
+                            ]);
+                        }
                     }
                 }
+                
+                \DB::commit();
+            } catch (\Exception $e) {
+                \DB::rollback();
+                throw $e;
             }
 
-            // Reload the item with its relationships
-            $item = Item::with(['category', 'foto_barang'])->find($item->id);
+            $item->load(['category', 'foto_barang']);
 
             return response()->json([
                 'message' => 'Item created successfully',

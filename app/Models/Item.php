@@ -60,6 +60,15 @@ class Item extends Model
 
     public function foto_barang()
     {
-        return $this->hasMany(FotoBarang::class, 'item_id');
+        return $this->hasMany(FotoBarang::class);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($item) {
+            $item->load('foto_barang');
+        });
     }
 }
