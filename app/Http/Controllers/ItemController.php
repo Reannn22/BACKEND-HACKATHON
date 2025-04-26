@@ -39,9 +39,10 @@ class ItemController extends Controller
 
     private function formatItemResponse($item)
     {
-        // Force refresh the relationships
-        $item->refresh();
+        // Force fresh loading of photos
         $item->loadMissing(['category', 'location', 'admin', 'foto_barang']);
+
+        $photos = $item->foto_barang()->orderBy('id', 'asc')->get();
 
         return [
             'id' => $item->id,
@@ -58,7 +59,7 @@ class ItemController extends Controller
             'harga_perolehan' => $item->harga_perolehan,
             'status_barang' => $item->status_barang,
             'is_dibawa' => $item->is_dibawa,
-            'foto_barang' => collect($item->foto_barang ?: [])->map(function($foto) {
+            'foto_barang' => $photos->map(function($foto) {
                 return [
                     'id' => $foto->id,
                     'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
@@ -88,10 +89,18 @@ class ItemController extends Controller
         ];
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $items = Item::with(['category', 'location', 'admin', 'foto_barang'])->get();
+            $query = Item::with(['category', 'location', 'admin', 'foto_barang']);
+
+            // Add name filter if search parameter exists
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where('nama_barang', 'LIKE', "%{$search}%");
+            }
+
+            $items = $query->get();
             $formattedItems = $items->map(function($item) {
                 return $this->formatItemResponse($item);
             });
@@ -164,11 +173,16 @@ class ItemController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $item = Item::with(['category', 'location', 'admin', 'foto_barang'])
+            // Get item with eager loaded relationships
+            $item = Item::with(['category', 'location', 'admin'])
                 ->findOrFail($id);
 
-            $item->loadMissing('foto_barang');
+            // Force fresh load of photos
+            $item->load(['foto_barang' => function($query) {
+                $query->orderBy('id', 'asc');
+            }]);
 
+            // Format and return response
             return response()->json([
                 'message' => 'Item retrieved successfully',
                 'data' => $this->formatItemResponse($item)
