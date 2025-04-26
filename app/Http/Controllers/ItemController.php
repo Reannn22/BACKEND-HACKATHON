@@ -26,8 +26,7 @@ class ItemController extends Controller
         'kondisi_barang' => 'required|string|in:baru,baik,rusak ringan,rusak berat',
         'status_barang' => 'required|string|in:aktif,non-aktif,dipinjam,dalam perbaikan',
         'harga_perolehan' => 'required|numeric|min:0',
-        'id_admin' => 'required|exists:users,id'
-        // Removed jumlah_tersedia from validation rules since it will be set automatically
+        // Removed id_admin from validation rules
     ];
 
     private function formatWeight($weight)
@@ -115,6 +114,8 @@ class ItemController extends Controller
             }
 
             $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
+            // Add authenticated user's ID automatically
+            $validatedData['id_admin'] = auth()->id();
 
             $item = Item::create($validatedData);
 
