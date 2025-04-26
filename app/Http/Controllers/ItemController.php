@@ -39,7 +39,8 @@ class ItemController extends Controller
 
     private function formatItemResponse($item)
     {
-        // Force reload relationships if not loaded
+        // Force refresh the relationships
+        $item->refresh();
         $item->loadMissing(['category', 'location', 'admin', 'foto_barang']);
 
         return [
@@ -57,12 +58,12 @@ class ItemController extends Controller
             'harga_perolehan' => $item->harga_perolehan,
             'status_barang' => $item->status_barang,
             'is_dibawa' => $item->is_dibawa,
-            'foto_barang' => $item->foto_barang ? $item->foto_barang->map(function($foto) {
+            'foto_barang' => collect($item->foto_barang ?: [])->map(function($foto) {
                 return [
                     'id' => $foto->id,
                     'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
                 ];
-            })->toArray() : [],
+            })->values()->all(),
             'kategori' => $item->category ? [
                 'id' => $item->category->id,
                 'nama_kategori' => $item->category->nama_kategori
@@ -163,20 +164,10 @@ class ItemController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            // Force fresh loading of all relationships including photos
-            $item = Item::where('id', $id)
-                ->with(['category', 'location', 'admin', 'foto_barang'])
-                ->firstOrFail();
+            $item = Item::with(['category', 'location', 'admin', 'foto_barang'])
+                ->findOrFail($id);
 
-            // Double check foto_barang relationship is loaded
-            if (!$item->relationLoaded('foto_barang')) {
-                $item->load(['foto_barang' => function($query) {
-                    $query->orderBy('id', 'asc');
-                }]);
-            }
-
-            // Ensure we have photos array even if empty
-            $item->setRelation('foto_barang', $item->foto_barang ?: collect([]));
+            $item->loadMissing('foto_barang');
 
             return response()->json([
                 'message' => 'Item retrieved successfully',
