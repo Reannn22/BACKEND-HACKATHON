@@ -90,11 +90,11 @@ class ItemController extends Controller
             $items = Item::with(['category', 'location', 'admin', 'foto_barang'])->get();
             $formattedItems = $items->map(function($item) {
                 return $this->formatItemResponse($item);
-            })->filter();
+            });
 
             return response()->json([
                 'message' => 'Items retrieved successfully',
-                'data' => array_values($formattedItems->toArray())
+                'data' => $formattedItems->values()->all()
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -109,42 +109,49 @@ class ItemController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
+            // Reset auto-increment to 1 if no items exist
             if (Item::count() === 0) {
                 \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
             }
 
-            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
-            // Add authenticated user's ID automatically
-            $validatedData['id_admin'] = auth()->id();
+            // Start transaction
+            \DB::beginTransaction();
 
-            $item = Item::create($validatedData);
+            try {
+                $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
+                $validatedData['id_admin'] = auth()->id();
 
-            // Handle photo uploads if present
-            if ($request->hasFile('foto_barang')) {
-                $files = $request->file('foto_barang');
-                if (!is_array($files)) {
-                    $files = [$files];
-                }
+                $item = Item::create($validatedData);
 
-                foreach ($files as $photo) {
-                    if ($photo->isValid()) {
-                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
-                        $path = $photo->storeAs('public/foto_barang', $filename);
+                if ($request->hasFile('foto_barang')) {
+                    $files = $request->file('foto_barang');
+                    if (!is_array($files)) {
+                        $files = [$files];
+                    }
 
-                        $item->foto_barang()->create([
-                            'foto_path' => $filename
-                        ]);
+                    foreach ($files as $photo) {
+                        if ($photo->isValid()) {
+                            $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
+                            $photo->storeAs('public/foto_barang', $filename);
+
+                            $item->foto_barang()->create([
+                                'foto_path' => $filename
+                            ]);
+                        }
                     }
                 }
+
+                \DB::commit();
+                $item->load(['category', 'location', 'foto_barang', 'admin']);
+
+                return response()->json([
+                    'message' => 'Item created successfully',
+                    'data' => $this->formatItemResponse($item)
+                ], 201);
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
             }
-
-            // Load relationships
-            $item->load(['category', 'location', 'foto_barang', 'admin']);
-
-            return response()->json([
-                'message' => 'Item created successfully',
-                'data' => $this->formatItemResponse($item)
-            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create item',
@@ -223,29 +230,33 @@ class ItemController extends Controller
     {
         try {
             \DB::beginTransaction();
-            try {
-                // Disable foreign key checks
-                \DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-                // Delete all records from both tables
-                \DB::table('foto_barang')->truncate();
-                Item::truncate();
+            // Disable foreign key checks
+            \DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-                // Re-enable foreign key checks
-                \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            // Delete all records from both tables
+            \DB::table('foto_barang')->truncate();
+            Item::truncate();
 
-                \DB::commit();
+            // Reset auto-increment
+            \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
+            \DB::statement('ALTER TABLE foto_barang AUTO_INCREMENT = 1');
 
-                return response()->json([
-                    'message' => 'All items deleted successfully'
-                ], 200);
-            } catch (\Exception $e) {
-                \DB::rollback();
-                // Make sure foreign key checks are re-enabled even if there's an error
-                \DB::statement('SET FOREIGN_KEY_CHECKS=1');
-                throw $e;
-            }
+            // Re-enable foreign key checks
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+            \DB::commit();
+
+            return response()->json([
+                'message' => 'All items deleted successfully'
+            ], 200);
+
         } catch (\Exception $e) {
+            if (\DB::transactionLevel() > 0) {
+                \DB::rollBack();
+            }
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
             return response()->json([
                 'message' => 'Failed to delete all items',
                 'error' => $e->getMessage()
