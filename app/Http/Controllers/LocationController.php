@@ -12,14 +12,6 @@ class LocationController extends Controller
         'nama_lokasi' => 'required|string|max:255'
     ];
 
-    private function formatLocationResponse($location)
-    {
-        return [
-            'id' => $location->id,
-            'nama_lokasi' => $location->nama_lokasi
-        ];
-    }
-
     public function index(): JsonResponse
     {
         try {
@@ -40,16 +32,14 @@ class LocationController extends Controller
     {
         try {
             $validatedData = $request->validate($this->rules);
-
-            if (Location::count() === 0) {
-                \DB::statement('ALTER TABLE locations AUTO_INCREMENT = 1');
-            }
-
             $location = Location::create($validatedData);
 
             return response()->json([
                 'message' => 'Location created successfully',
-                'data' => $this->formatLocationResponse($location)
+                'data' => [
+                    'id' => $location->id,
+                    'nama_lokasi' => $location->nama_lokasi
+                ]
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -65,7 +55,10 @@ class LocationController extends Controller
             $location = Location::select('id', 'nama_lokasi')->findOrFail($id);
             return response()->json([
                 'message' => 'Location retrieved successfully',
-                'data' => $this->formatLocationResponse($location)
+                'data' => [
+                    'id' => $location->id,
+                    'nama_lokasi' => $location->nama_lokasi
+                ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -84,7 +77,10 @@ class LocationController extends Controller
             $location->update($validatedData);
             return response()->json([
                 'message' => 'Location updated successfully',
-                'data' => $this->formatLocationResponse($location)
+                'data' => [
+                    'id' => $location->id,
+                    'nama_lokasi' => $location->nama_lokasi
+                ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

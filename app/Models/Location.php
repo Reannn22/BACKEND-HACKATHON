@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Location extends Model
 {
+    public $timestamps = false;
     protected $fillable = ['nama_lokasi'];
-    protected $visible = ['id', 'nama_lokasi'];
-    public $timestamps = false; // Disable timestamps if not needed
 }
