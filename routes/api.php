@@ -31,6 +31,7 @@ Route::delete('/items_reviews', [ItemReviewController::class, 'deleteAll']);
 
 // Public routes for items
 Route::get('/items', [ItemController::class, 'index']);
+Route::get('/items/category/{nama_kategori}', [ItemController::class, 'getByCategory']); // Add this line
 Route::get('/items/{id}', [ItemController::class, 'show']);
 
 Route::middleware('auth:api')->group(function () {

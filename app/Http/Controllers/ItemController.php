@@ -116,11 +116,11 @@ class ItemController extends Controller
                 $query->where('tahun_pengadaan', $tahun);
             }
 
-            // Category filter
+            // Category filter using exact match
             if ($request->has('kategori')) {
                 $kategori = $request->kategori;
                 $query->whereHas('category', function($q) use ($kategori) {
-                    $q->where('nama_kategori', 'LIKE', "%{$kategori}%");
+                    $q->where('nama_kategori', '=', $kategori);
                 });
             }
 
@@ -310,6 +310,29 @@ class ItemController extends Controller
 
             return response()->json([
                 'message' => 'Failed to delete all items',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getByCategory(string $nama_kategori): JsonResponse
+    {
+        try {
+            $items = Item::whereHas('category', function($query) use ($nama_kategori) {
+                $query->where('nama_kategori', 'LIKE', "%{$nama_kategori}%");
+            })->with(['category', 'location', 'admin', 'foto_barang'])->get();
+
+            $formattedItems = $items->map(function($item) {
+                return $this->formatItemResponse($item);
+            });
+
+            return response()->json([
+                'message' => 'Items retrieved successfully',
+                'data' => $formattedItems->values()->all()
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve items',
                 'error' => $e->getMessage()
             ], 500);
         }
