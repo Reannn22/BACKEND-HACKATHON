@@ -39,18 +39,21 @@ class ItemController extends Controller
 
     private function formatItemResponse($item)
     {
+        // Ensure relationships are loaded
+        $item->loadMissing(['category', 'location', 'admin', 'foto_barang']);
+
         return [
             'id' => $item->id,
             'nama_barang' => $item->nama_barang,
             'kode_barang' => $item->kode_barang,
             'merek_barang' => $item->merek_barang,
             'tahun_pengadaan' => $item->tahun_pengadaan,
-            'foto_barang' => $item->foto_barang->map(function($foto) {
+            'foto_barang' => $item->foto_barang ? $item->foto_barang->map(function($foto) {
                 return [
                     'id' => $foto->id,
                     'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
                 ];
-            }),
+            })->toArray() : [],
             'deskripsi_barang' => $item->deskripsi_barang,
             'jumlah_barang' => $item->jumlah_barang,
             'jumlah_tersedia' => $item->jumlah_tersedia,
@@ -163,7 +166,9 @@ class ItemController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $item = Item::with(['category', 'location', 'admin', 'foto_barang'])->findOrFail($id);
+            $item = Item::with(['category', 'location', 'admin', 'foto_barang'])
+                ->findOrFail($id);
+
             return response()->json([
                 'message' => 'Item retrieved successfully',
                 'data' => $this->formatItemResponse($item)

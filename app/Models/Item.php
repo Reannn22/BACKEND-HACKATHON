@@ -19,7 +19,7 @@ class Item extends Model
         'jumlah_tersedia',
         'id_kategori',
         'id_lokasi',
-        'id_admin', // Add this
+        'id_admin',
         'is_dibawa',
         'berat_barang',
         'warna_barang',
@@ -39,6 +39,8 @@ class Item extends Model
     public function toArray()
     {
         $array = parent::toArray();
+        $this->loadMissing(['foto_barang', 'category', 'location', 'admin']);
+        
         return [
             'id' => $array['id'],
             'nama_barang' => $array['nama_barang'],
@@ -76,6 +78,9 @@ class Item extends Model
             'is_dibawa' => $array['is_dibawa'],
             'berat_barang' => $array['formatted_weight'],
             'warna_barang' => $array['warna_barang'],
+            'kondisi_barang' => $array['kondisi_barang'],
+            'status_barang' => $array['status_barang'],
+            'harga_perolehan' => $array['harga_perolehan'],
             'created_at' => $array['created_at'],
             'updated_at' => $array['updated_at']
         ];
