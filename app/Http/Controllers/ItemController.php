@@ -116,12 +116,34 @@ class ItemController extends Controller
                 $query->where('tahun_pengadaan', $tahun);
             }
 
-            // Category filter using exact match
+            // Category filter - case insensitive and partial match
             if ($request->has('kategori')) {
                 $kategori = $request->kategori;
                 $query->whereHas('category', function($q) use ($kategori) {
-                    $q->where('nama_kategori', '=', $kategori);
+                    // Handle both "Elektronik" and "Elektonik" spellings
+                    $q->where('nama_kategori', 'LIKE', "%{$kategori}%")
+                      ->orWhere(\DB::raw('LOWER(nama_kategori)'), 'LIKE', '%' . strtolower($kategori) . '%');
                 });
+            }
+
+            // Location filter using case-insensitive search
+            if ($request->has('lokasi')) {
+                $lokasi = $request->lokasi;
+                $query->whereHas('location', function($q) use ($lokasi) {
+                    $q->whereRaw('LOWER(nama_lokasi) LIKE ?', ['%' . strtolower($lokasi) . '%']);
+                });
+            }
+
+            // Status filter
+            if ($request->has('status')) {
+                $status = $request->status;
+                $query->where('status_barang', $status);
+            }
+
+            // Condition filter
+            if ($request->has('kondisi')) {
+                $kondisi = $request->kondisi;
+                $query->where('kondisi_barang', $kondisi);
             }
 
             $items = $query->get();
