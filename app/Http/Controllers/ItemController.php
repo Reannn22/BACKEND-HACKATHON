@@ -250,23 +250,34 @@ class ItemController extends Controller
     public function deleteAll(): JsonResponse
     {
         try {
-            \DB::beginTransaction();
+            // Collect all photo paths before deletion
+            $items = Item::with('foto_barang')->get();
+            $photoPaths = [];
+            foreach ($items as $item) {
+                foreach ($item->foto_barang as $foto) {
+                    $photoPaths[] = 'public/foto_barang/' . $foto->foto_path;
+                }
+            }
 
-            // Disable foreign key checks
+            // Start database operations
+            \DB::beginTransaction();
             \DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-            // Delete all records from both tables
+            // Truncate tables
             \DB::table('foto_barang')->truncate();
             Item::truncate();
 
-            // Reset auto-increment
+            // Reset auto-increments
             \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
             \DB::statement('ALTER TABLE foto_barang AUTO_INCREMENT = 1');
 
-            // Re-enable foreign key checks
             \DB::statement('SET FOREIGN_KEY_CHECKS=1');
-
             \DB::commit();
+
+            // Delete physical files after successful database cleanup
+            foreach ($photoPaths as $path) {
+                Storage::delete($path);
+            }
 
             return response()->json([
                 'message' => 'All items deleted successfully'
