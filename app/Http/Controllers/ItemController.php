@@ -71,9 +71,7 @@ class ItemController extends Controller
             ] : null,
             'lokasi' => $item->location ? [
                 'id' => $item->location->id,
-                'nama_lokasi' => $item->location->nama_lokasi,
-                'gedung' => $item->location->gedung,
-                'ruangan' => $item->location->ruangan
+                'nama_lokasi' => $item->location->nama_lokasi
             ] : null,
             'admin' => $item->admin ? [
                 'id' => $item->admin->id,
