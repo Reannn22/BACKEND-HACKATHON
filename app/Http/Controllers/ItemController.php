@@ -164,6 +164,36 @@ class ItemController extends Controller
                 $query->where('jumlah_tersedia', $jumlahTersedia);
             }
 
+            // Price range filter
+            if ($request->has('harga_min') || $request->has('harga_max')) {
+                if ($request->has('harga_min')) {
+                    $query->where('harga_perolehan', '>=', $request->harga_min);
+                }
+                if ($request->has('harga_max')) {
+                    $query->where('harga_perolehan', '<=', $request->harga_max);
+                }
+            }
+
+            // Weight filter
+            if ($request->has('berat_barang')) {
+                $beratBarang = $request->berat_barang;
+                $query->where('berat_barang', $beratBarang);
+            }
+
+            // Date filter
+            if ($request->has('date')) {
+                $date = $request->date;
+                $query->whereDate('created_at', $date);
+            }
+
+            // Date range filter
+            if ($request->has('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->has('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
             // Total quantity sorting
             if ($request->has('jumlah_total')) {
                 $query->orderBy('jumlah_barang', 'desc');
