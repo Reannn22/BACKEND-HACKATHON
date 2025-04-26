@@ -8,4 +8,5 @@ class Location extends Model
 {
     protected $fillable = ['nama_lokasi'];
     protected $visible = ['id', 'nama_lokasi'];
+    public $timestamps = false; // Disable timestamps if not needed
 }
