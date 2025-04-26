@@ -110,59 +110,49 @@ class ItemController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            // Validate data first
             $validatedData = $request->validate($this->rules);
+            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
+            $validatedData['id_admin'] = auth()->id();
 
-            \DB::beginTransaction();
-
-            try {
-                // Reset tables if empty, handling foreign keys properly
-                if (Item::count() === 0) {
-                    \DB::statement('SET FOREIGN_KEY_CHECKS=0');
-                    // Must truncate child table first
-                    \DB::table('foto_barang')->truncate();
-                    \DB::table('items')->truncate();
-                    \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
-                    \DB::statement('ALTER TABLE foto_barang AUTO_INCREMENT = 1');
-                    \DB::statement('SET FOREIGN_KEY_CHECKS=1');
-                }
-
-                $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
-                $validatedData['id_admin'] = auth()->id();
-
-                $item = Item::create($validatedData);
-
-                if ($request->hasFile('foto_barang')) {
-                    $files = $request->file('foto_barang');
-                    if (!is_array($files)) {
-                        $files = [$files];
-                    }
-
-                    foreach ($files as $photo) {
-                        if ($photo->isValid()) {
-                            $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
-                            $photo->storeAs('public/foto_barang', $filename);
-
-                            $item->foto_barang()->create([
-                                'foto_path' => $filename
-                            ]);
-                        }
-                    }
-                }
-
-                \DB::commit();
-                $item->load(['category', 'location', 'foto_barang', 'admin']);
-
-                return response()->json([
-                    'message' => 'Item created successfully',
-                    'data' => $this->formatItemResponse($item)
-                ], 201);
-
-            } catch (\Exception $e) {
-                \DB::rollBack();
+            // Reset if needed
+            if (Item::count() === 0) {
+                \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+                \DB::table('foto_barang')->truncate();
+                \DB::table('items')->truncate();
                 \DB::statement('SET FOREIGN_KEY_CHECKS=1');
-                throw $e;
             }
+
+            // Create item
+            $item = Item::create($validatedData);
+
+            // Handle photo uploads
+            if ($request->hasFile('foto_barang')) {
+                $files = $request->file('foto_barang');
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+
+                foreach ($files as $photo) {
+                    if ($photo->isValid()) {
+                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
+                        $photo->storeAs('public/foto_barang', $filename);
+                        $item->foto_barang()->create(['foto_path' => $filename]);
+                    }
+                }
+            }
+
+            // Load relationships
+            $item->load(['category', 'location', 'foto_barang', 'admin']);
+
+            return response()->json([
+                'message' => 'Item created successfully',
+                'data' => $this->formatItemResponse($item)
+            ], 201);
+
         } catch (\Exception $e) {
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
             return response()->json([
                 'message' => 'Failed to create item',
                 'error' => $e->getMessage()
