@@ -9,36 +9,24 @@ use Illuminate\Http\JsonResponse;
 class LocationController extends Controller
 {
     protected $rules = [
-        'nama_lokasi' => 'required|string|max:255',
-        'kode_lokasi' => 'required|string|max:50',
-        'gedung' => 'required|string|max:255',
-        'lantai' => 'required|string|max:50',
-        'ruangan' => 'required|string|max:50',
-        'deskripsi' => 'required|string'
+        'nama_lokasi' => 'required|string|max:255'
     ];
 
-    private function formatResponse($location)
+    private function formatLocationResponse($location)
     {
         return [
             'id' => $location->id,
-            'nama_lokasi' => $location->nama_lokasi,
-            'kode_lokasi' => $location->kode_lokasi,
-            'gedung' => $location->gedung,
-            'lantai' => $location->lantai,
-            'ruangan' => $location->ruangan,
-            'deskripsi' => $location->deskripsi,
-            'created_at' => $location->created_at,
-            'updated_at' => $location->updated_at
+            'nama_lokasi' => $location->nama_lokasi
         ];
     }
 
     public function index(): JsonResponse
     {
         try {
-            $locations = Location::all();
+            $locations = Location::select('id', 'nama_lokasi')->get();
             return response()->json([
                 'message' => 'Locations retrieved successfully',
-                'data' => $locations->map(fn($location) => $this->formatResponse($location))
+                'data' => $locations
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -61,7 +49,7 @@ class LocationController extends Controller
 
             return response()->json([
                 'message' => 'Location created successfully',
-                'data' => $this->formatResponse($location)
+                'data' => $this->formatLocationResponse($location)
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -74,10 +62,10 @@ class LocationController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $location = Location::findOrFail($id);
+            $location = Location::select('id', 'nama_lokasi')->findOrFail($id);
             return response()->json([
                 'message' => 'Location retrieved successfully',
-                'data' => $this->formatResponse($location)
+                'data' => $this->formatLocationResponse($location)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -96,7 +84,7 @@ class LocationController extends Controller
             $location->update($validatedData);
             return response()->json([
                 'message' => 'Location updated successfully',
-                'data' => $this->formatResponse($location)
+                'data' => $this->formatLocationResponse($location)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
