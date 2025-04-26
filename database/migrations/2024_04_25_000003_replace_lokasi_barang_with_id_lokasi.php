@@ -9,22 +9,22 @@ return new class extends Migration
     public function up()
     {
         Schema::table('items', function (Blueprint $table) {
-            // Drop the old column if it exists
-            if (Schema::hasColumn('items', 'lokasi_barang')) {
-                $table->dropColumn('lokasi_barang');
+            // Drop the foreign key first if exists
+            if (Schema::hasColumn('items', 'id_lokasi')) {
+                $table->dropForeign(['id_lokasi']);
+                $table->dropColumn('id_lokasi');
             }
 
-            // Add the new column if it doesn't exist
-            if (!Schema::hasColumn('items', 'id_lokasi')) {
-                $table->foreignId('id_lokasi')->nullable()->constrained('locations');
-            }
+            // Add the new column with foreign key
+            $table->foreignId('id_lokasi')
+                  ->after('id_kategori')
+                  ->constrained('locations');
         });
     }
 
     public function down()
     {
         Schema::table('items', function (Blueprint $table) {
-            $table->string('lokasi_barang')->nullable();
             $table->dropForeign(['id_lokasi']);
             $table->dropColumn('id_lokasi');
         });
