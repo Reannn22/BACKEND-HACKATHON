@@ -48,15 +48,21 @@ class ItemController extends Controller
             'kode_barang' => $item->kode_barang,
             'merek_barang' => $item->merek_barang,
             'tahun_pengadaan' => $item->tahun_pengadaan,
+            'deskripsi_barang' => $item->deskripsi_barang,
+            'jumlah_barang' => $item->jumlah_barang,
+            'jumlah_tersedia' => $item->jumlah_tersedia,
+            'berat_barang' => $this->formatWeight($item->berat_barang),
+            'warna_barang' => $item->warna_barang,
+            'kondisi_barang' => $item->kondisi_barang,
+            'harga_perolehan' => $item->harga_perolehan,
+            'status_barang' => $item->status_barang,
+            'is_dibawa' => $item->is_dibawa,
             'foto_barang' => $item->foto_barang ? $item->foto_barang->map(function($foto) {
                 return [
                     'id' => $foto->id,
                     'foto_path' => asset('storage/foto_barang/' . $foto->foto_path)
                 ];
             })->toArray() : [],
-            'deskripsi_barang' => $item->deskripsi_barang,
-            'jumlah_barang' => $item->jumlah_barang,
-            'jumlah_tersedia' => $item->jumlah_tersedia,
             'kategori' => $item->category ? [
                 'id' => $item->category->id,
                 'nama_kategori' => $item->category->nama_kategori
@@ -76,12 +82,6 @@ class ItemController extends Controller
                 'created_at' => $item->admin->created_at,
                 'updated_at' => $item->admin->updated_at
             ] : null,
-            'is_dibawa' => $item->is_dibawa,
-            'berat_barang' => $this->formatWeight($item->berat_barang),
-            'warna_barang' => $item->warna_barang,
-            'kondisi_barang' => $item->kondisi_barang,
-            'status_barang' => $item->status_barang,
-            'harga_perolehan' => $item->harga_perolehan,
             'created_at' => $item->created_at,
             'updated_at' => $item->updated_at
         ];
