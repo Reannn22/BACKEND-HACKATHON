@@ -94,16 +94,36 @@ class ItemController extends Controller
         try {
             $query = Item::with(['category', 'location', 'admin', 'foto_barang']);
 
-            // Add name filter if search parameter exists
+            // Name filter
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where('nama_barang', 'LIKE', "%{$search}%");
             }
 
-            // Add code filter if kode parameter exists
+            // Code filter
             if ($request->has('kode')) {
                 $kode = $request->kode;
                 $query->where('kode_barang', $kode);
+            }
+
+            // Brand filter
+            if ($request->has('merek')) {
+                $merek = $request->merek;
+                $query->where('merek_barang', 'LIKE', "%{$merek}%");
+            }
+
+            // Year filter
+            if ($request->has('tahun')) {
+                $tahun = $request->tahun;
+                $query->where('tahun_pengadaan', $tahun);
+            }
+
+            // Category filter
+            if ($request->has('kategori')) {
+                $kategori = $request->kategori;
+                $query->whereHas('category', function($q) use ($kategori) {
+                    $q->where('nama_kategori', 'LIKE', "%{$kategori}%");
+                });
             }
 
             $items = $query->get();
