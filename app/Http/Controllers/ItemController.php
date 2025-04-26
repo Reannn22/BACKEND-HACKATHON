@@ -146,6 +146,29 @@ class ItemController extends Controller
                 $query->where('kondisi_barang', $kondisi);
             }
 
+            // Is Dibawa filter
+            if ($request->has('is_dibawa')) {
+                $isDibawa = $request->is_dibawa;
+                $query->where('is_dibawa', $isDibawa);
+            }
+
+            // Total quantity filter
+            if ($request->has('jumlah_total')) {
+                $jumlahTotal = $request->jumlah_total;
+                $query->where('jumlah_barang', $jumlahTotal);
+            }
+
+            // Available quantity filter
+            if ($request->has('jumlah_tersedia')) {
+                $jumlahTersedia = $request->jumlah_tersedia;
+                $query->where('jumlah_tersedia', $jumlahTersedia);
+            }
+
+            // Total quantity sorting
+            if ($request->has('jumlah_total')) {
+                $query->orderBy('jumlah_barang', 'desc');
+            }
+
             $items = $query->get();
             $formattedItems = $items->map(function($item) {
                 return $this->formatItemResponse($item);
