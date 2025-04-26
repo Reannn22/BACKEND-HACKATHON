@@ -39,7 +39,7 @@ class ItemController extends Controller
 
     private function formatItemResponse($item)
     {
-        // Ensure relationships are loaded
+        // Force reload relationships if not loaded
         $item->loadMissing(['category', 'location', 'admin', 'foto_barang']);
 
         return [
@@ -163,8 +163,20 @@ class ItemController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $item = Item::with(['category', 'location', 'admin', 'foto_barang'])
-                ->findOrFail($id);
+            // Force fresh loading of all relationships including photos
+            $item = Item::where('id', $id)
+                ->with(['category', 'location', 'admin', 'foto_barang'])
+                ->firstOrFail();
+
+            // Double check foto_barang relationship is loaded
+            if (!$item->relationLoaded('foto_barang')) {
+                $item->load(['foto_barang' => function($query) {
+                    $query->orderBy('id', 'asc');
+                }]);
+            }
+
+            // Ensure we have photos array even if empty
+            $item->setRelation('foto_barang', $item->foto_barang ?: collect([]));
 
             return response()->json([
                 'message' => 'Item retrieved successfully',
