@@ -218,12 +218,28 @@ class ItemController extends Controller
     public function destroy(int $id): JsonResponse
     {
         try {
-            $item = Item::findOrFail($id);
+            \DB::beginTransaction();
+
+            $item = Item::with('foto_barang')->findOrFail($id);
+
+            // Check if foto_barang exists before trying to delete photos
+            if ($item->foto_barang && $item->foto_barang->count() > 0) {
+                foreach ($item->foto_barang as $foto) {
+                    Storage::delete('public/foto_barang/' . $foto->foto_path);
+                }
+            }
+
+            // Delete the item
             $item->delete();
+
+            \DB::commit();
+
             return response()->json([
                 'message' => 'Item deleted successfully'
             ], 200);
+
         } catch (\Exception $e) {
+            \DB::rollBack();
             return response()->json([
                 'message' => 'Failed to delete item',
                 'error' => $e->getMessage()
