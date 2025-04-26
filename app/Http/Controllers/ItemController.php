@@ -112,50 +112,49 @@ class ItemController extends Controller
         try {
             $validatedData = $request->validate($this->rules);
 
-            // Reset auto-increment to 1 if no items exist
+            // Reset auto-increment if tables are empty
             if (Item::count() === 0) {
+                // Reset items table auto-increment
                 \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
+                // Reset foto_barang table auto-increment
+                \DB::statement('ALTER TABLE foto_barang AUTO_INCREMENT = 1');
             }
 
-            // Start transaction
             \DB::beginTransaction();
 
-            try {
-                $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
-                $validatedData['id_admin'] = auth()->id();
+            $validatedData['jumlah_tersedia'] = $validatedData['jumlah_barang'];
+            $validatedData['id_admin'] = auth()->id();
 
-                $item = Item::create($validatedData);
+            $item = Item::create($validatedData);
 
-                if ($request->hasFile('foto_barang')) {
-                    $files = $request->file('foto_barang');
-                    if (!is_array($files)) {
-                        $files = [$files];
-                    }
-
-                    foreach ($files as $photo) {
-                        if ($photo->isValid()) {
-                            $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
-                            $photo->storeAs('public/foto_barang', $filename);
-
-                            $item->foto_barang()->create([
-                                'foto_path' => $filename
-                            ]);
-                        }
-                    }
+            if ($request->hasFile('foto_barang')) {
+                $files = $request->file('foto_barang');
+                if (!is_array($files)) {
+                    $files = [$files];
                 }
 
-                \DB::commit();
-                $item->load(['category', 'location', 'foto_barang', 'admin']);
+                foreach ($files as $photo) {
+                    if ($photo->isValid()) {
+                        $filename = time() . '_' . uniqid() . '_' . $photo->getClientOriginalName();
+                        $photo->storeAs('public/foto_barang', $filename);
 
-                return response()->json([
-                    'message' => 'Item created successfully',
-                    'data' => $this->formatItemResponse($item)
-                ], 201);
-            } catch (\Exception $e) {
-                \DB::rollBack();
-                throw $e;
+                        $item->foto_barang()->create([
+                            'foto_path' => $filename
+                        ]);
+                    }
+                }
             }
+
+            \DB::commit();
+            $item->load(['category', 'location', 'foto_barang', 'admin']);
+
+            return response()->json([
+                'message' => 'Item created successfully',
+                'data' => $this->formatItemResponse($item)
+            ], 201);
+
         } catch (\Exception $e) {
+            \DB::rollBack();
             return response()->json([
                 'message' => 'Failed to create item',
                 'error' => $e->getMessage()
@@ -250,43 +249,24 @@ class ItemController extends Controller
     public function deleteAll(): JsonResponse
     {
         try {
-            // Collect all photo paths before deletion
-            $items = Item::with('foto_barang')->get();
-            $photoPaths = [];
-            foreach ($items as $item) {
-                foreach ($item->foto_barang as $foto) {
-                    $photoPaths[] = 'public/foto_barang/' . $foto->foto_path;
-                }
-            }
-
-            // Start database operations
-            \DB::beginTransaction();
+            // Start database transaction
             \DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-            // Truncate tables
-            \DB::table('foto_barang')->truncate();
-            Item::truncate();
+            // Delete all items and photos
+            \DB::table('foto_barang')->delete();
+            Item::query()->delete();
 
-            // Reset auto-increments
+            // Reset auto-increment
             \DB::statement('ALTER TABLE items AUTO_INCREMENT = 1');
             \DB::statement('ALTER TABLE foto_barang AUTO_INCREMENT = 1');
 
             \DB::statement('SET FOREIGN_KEY_CHECKS=1');
-            \DB::commit();
-
-            // Delete physical files after successful database cleanup
-            foreach ($photoPaths as $path) {
-                Storage::delete($path);
-            }
 
             return response()->json([
                 'message' => 'All items deleted successfully'
             ], 200);
 
         } catch (\Exception $e) {
-            if (\DB::transactionLevel() > 0) {
-                \DB::rollBack();
-            }
             \DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
             return response()->json([
