@@ -100,6 +100,12 @@ class ItemController extends Controller
                 $query->where('nama_barang', 'LIKE', "%{$search}%");
             }
 
+            // Add code filter if kode parameter exists
+            if ($request->has('kode')) {
+                $kode = $request->kode;
+                $query->where('kode_barang', $kode);
+            }
+
             $items = $query->get();
             $formattedItems = $items->map(function($item) {
                 return $this->formatItemResponse($item);

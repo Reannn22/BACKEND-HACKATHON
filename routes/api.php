@@ -29,6 +29,10 @@ Route::put('/items_reviews/{id}', [ItemReviewController::class, 'update']);
 Route::delete('/items_reviews/{id}', [ItemReviewController::class, 'destroy']);
 Route::delete('/items_reviews', [ItemReviewController::class, 'deleteAll']);
 
+// Public routes for items
+Route::get('/items', [ItemController::class, 'index']);
+Route::get('/items/{id}', [ItemController::class, 'show']);
+
 Route::middleware('auth:api')->group(function () {
     Route::post('/admin/register', [AdminAuthController::class, 'register']);
     Route::get('/admin/{id}', [AdminAuthController::class, 'show']); // developer dapat melihat data admin
@@ -50,10 +54,8 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/items_categories/{id}', [CategoryController::class, 'destroy']);
     Route::delete('/items_categories', [CategoryController::class, 'deleteAll']); // Add this line
 
-    // Items routes
-    Route::get('/items', [ItemController::class, 'index']);
+    // Protected items routes (except index and show)
     Route::post('/items', [ItemController::class, 'store']);
-    Route::get('/items/{id}', [ItemController::class, 'show']);
     Route::put('/items/{id}', [ItemController::class, 'update']);
     Route::delete('/items/{id}', [ItemController::class, 'destroy']);
     Route::delete('/items', [ItemController::class, 'deleteAll']);
